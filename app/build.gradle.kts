@@ -24,6 +24,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    sourceSets.named("debug") {
+        assets.srcDir(rootProject.file("local-assets/debug"))
+    }
 }
 
 kotlin {

@@ -19,4 +19,8 @@ keystore.properties
 .env
 .env.*
 
+# Private development files and collection assets
+/AGENTS.md
 docs
+/local-assets/
+**/assets/collection/

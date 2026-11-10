@@ -3,6 +3,14 @@
 A small, offline-first Android college project for managing a physical card
 collection and saved decks.
 
+### Local collection assets
+
+With the private color catalogs and `card-images` directory under `docs`, run
+`python3 scripts/prepare_local_collection.py` to prepare the debug asset package.
+Rerun the script after updating the source catalog. Gradle reads the package from
+the ignored `local-assets` directory in local debug builds. Keep the downloaded
+files, the generated package and APKs containing it outside Git.
+
 ## Development build
 
 The current development build includes the following screens:
