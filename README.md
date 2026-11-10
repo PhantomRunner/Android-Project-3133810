@@ -11,6 +11,10 @@ Rerun the script after updating the source catalog. Gradle reads the package fro
 the ignored `local-assets` directory in local debug builds. Keep the downloaded
 files, the generated package and APKs containing it outside Git.
 
+Room uses SQLite to store catalog records and the quantity owned for each printing.
+KSP generates the database implementation. The exported Room schema under
+`app/schemas` describes the tables and relationships.
+
 ## Development build
 
 The current development build includes the following screens:
