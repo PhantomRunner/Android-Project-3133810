@@ -3,7 +3,7 @@
 A small, offline-first Android college project for managing a physical card
 collection and saved decks.
 
-### Local collection assets
+## Local collection assets
 
 With the private color catalogs and `card-images` directory under `docs`, run
 `python3 scripts/prepare_local_collection.py` to prepare the debug asset package.
@@ -14,6 +14,8 @@ files, the generated package and APKs containing it outside Git.
 Room uses SQLite to store catalog records and the quantity owned for each printing.
 KSP generates the database implementation. The exported Room schema under
 `app/schemas` describes the tables and relationships.
+Coil loads each image from the bundled local assets and displays a placeholder
+when an image is unavailable.
 
 ## Development build
 
@@ -42,6 +44,8 @@ The current development build includes the following screens:
   immediately. Removing the last copy hides the printing from Collection.
 - The two-column grid shows owned editions and quantities. Tapping a card opens its
   details. Search, filters and scroll position are restored when returning to the grid.
+- The catalog and owned grid display local artwork and gameplay stats. Missing
+  values appear as a dash and sort after known values in either direction.
 
 ### My decks
 

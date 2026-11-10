@@ -25,6 +25,9 @@
     <string name="collection_finish">Finish: %1$s</string>
     <string name="collection_owned_count">Owned: %1$d</string>
     <string name="collection_unknown_value">—</string>
+    <string name="collection_card_cost">Cost %1$s</string>
+    <string name="collection_card_power">Power %1$s</string>
+    <string name="collection_card_ram">RAM %1$s</string>
     <string name="search_by_name">Search by name</string>
     <string name="clear_search">Clear</string>
     <string name="no_cards_found">No cards found</string>
