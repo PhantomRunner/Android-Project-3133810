@@ -60,7 +60,7 @@ class FilterCardsTest {
         )
         assertTrue(filterCards(cards, state).isEmpty())
         assertTrue(filterCards(cards, CardBrowserState(query = "missing")).isEmpty())
-        assertTrue(filterCards(emptyList(), CardBrowserState()).isEmpty())
+        assertTrue(filterCards(emptyList<Card>(), CardBrowserState()).isEmpty())
     }
 
     @Test

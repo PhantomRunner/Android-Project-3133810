@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.example.cyberpunktcg.data.model.Card
+import com.example.cyberpunktcg.data.model.BrowsableCard
 import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
 
@@ -51,7 +51,7 @@ internal class CardBrowserViewModel(private val savedStateHandle: SavedStateHand
         uiState = uiState.copy(sortDirection = direction)
     }
 
-    fun visibleCards(cards: List<Card>): List<Card> = sortCards(
+    fun <T : BrowsableCard> visibleCards(cards: List<T>): List<T> = sortCards(
         filterCards(cards, uiState), uiState.sortField, uiState.sortDirection,
     )
 

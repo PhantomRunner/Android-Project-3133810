@@ -1,6 +1,6 @@
 package com.example.cyberpunktcg.ui.browser
 
-import com.example.cyberpunktcg.data.model.Card
+import com.example.cyberpunktcg.data.model.BrowsableCard
 
 internal enum class CardSortField {
     NAME,
@@ -16,26 +16,25 @@ internal enum class SortDirection {
     DESCENDING,
 }
 
-internal fun sortCards(
-    cards: List<Card>,
+internal fun <T : BrowsableCard> sortCards(
+    cards: List<T>,
     field: CardSortField,
     direction: SortDirection,
-): List<Card> {
-    val comparator: Comparator<Card> = when (field) {
-        CardSortField.NAME -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-        CardSortField.COST -> compareBy { it.cost }
-        CardSortField.POWER -> compareBy { it.power }
-        CardSortField.RAM -> compareBy { it.ram }
-        CardSortField.COLOR -> compareBy { it.color.ordinal }
-        CardSortField.TYPE -> compareBy { it.type.ordinal }
-    }
-    val directedComparator = if (direction == SortDirection.DESCENDING) {
-        comparator.reversed()
-    } else {
-        comparator
+): List<T> {
+    val descending = direction == SortDirection.DESCENDING
+    val nameOrder = if (descending) String.CASE_INSENSITIVE_ORDER.reversed() else String.CASE_INSENSITIVE_ORDER
+    val numberOrder = if (descending) reverseOrder<Int>() else naturalOrder<Int>()
+    val statOrder = nullsLast(numberOrder)
+    val comparator: Comparator<T> = when (field) {
+        CardSortField.NAME -> compareBy(nameOrder) { it.name }
+        CardSortField.COST -> compareBy(statOrder) { it.cost }
+        CardSortField.POWER -> compareBy(statOrder) { it.power }
+        CardSortField.RAM -> compareBy(statOrder) { it.ram }
+        CardSortField.COLOR -> compareBy(numberOrder) { it.color.ordinal }
+        CardSortField.TYPE -> compareBy(numberOrder) { it.type.ordinal }
     }
     // Keep equal values predictable in either direction, including after filtering.
     return cards.sortedWith(
-        directedComparator.thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }.thenBy { it.id },
+        comparator.thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }.thenBy { it.id },
     )
 }

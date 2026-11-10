@@ -37,15 +37,11 @@ The current development build includes the following screens:
 
 ### Collection
 
-- Displays a grid of six fictional demo cards with placeholder images and borders
-  matching each card's color.
-- Supports name search, multiple type and color selections with independent filter resets.
-- Cards can be sorted by Name, Cost, Power, RAM, Color and Type.
-- Tapping a card opens Card Details: name, subtitle, type, color, Cost, Power, RAM,
-  unit types and description. Search conditions and scroll position kept intact and recovered
-  when returning to the list.
-- Card view is read-only. Owned quantities and Room storage for the collection not 
-implemented yet.
+- Starts empty. Add cards opens the local catalog with its own search, filters and sort order.
+- Choose edition opens the available printings. The +/− buttons save counts to Room
+  immediately. Removing the last copy hides the printing from Collection.
+- The two-column grid shows owned editions and quantities. Tapping a card opens its
+  details. Search, filters and scroll position are restored when returning to the grid.
 
 ### My decks
 
@@ -107,7 +103,7 @@ The app follows a simple MVVM structure. Compose screens display state from
 ViewModels and pass user actions back to them. When the state changes, Compose
 updates the parts of the screen that use it.
 
-- Collection and Add cards browse the `DemoCards` catalog using the same
+- Collection, the local Add cards screen and the demo deck browser share
   `CardBrowserViewModel` logic. Each keeps its own search, filters and sort order.
 - `DecksViewModel` is shared by Home and the deck screens. The editor and Preview
   show the working copy while you edit. Save draft updates the version shown on
@@ -131,6 +127,5 @@ updates the parts of the screen that use it.
   photo stays in review through rotation or a return from the background while
   the process is alive. Retake or leaving Scanner discards the photo. After a
   process restart, Scanner starts a new capture session and clears leftover files.
-- **Between launches**, `ThemePreferences` restores the Light/Dark choice from
-  `SharedPreferences`. The same six demo cards load from code on every launch.
-  Room storage for the collection and decks is planned for Milestone 2.
+- **Between launches**, Room preserves ownership by printing ID and `ThemePreferences`
+  restores the Light/Dark choice from `SharedPreferences`.

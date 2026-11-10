@@ -18,7 +18,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.cyberpunktcg.data.sample.DemoCards
 import com.example.cyberpunktcg.ui.card.CardDetailsScreen
-import com.example.cyberpunktcg.ui.collection.CollectionScreen
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 import com.example.cyberpunktcg.ui.decks.DeckCardsScreen
 import com.example.cyberpunktcg.ui.decks.DeckEditorScreen
@@ -77,31 +76,7 @@ internal fun AppNavHost(
                 },
             )
         }
-        composable(AppDestination.Collection.route) {
-            val collectionBrowser: CardBrowserViewModel = viewModel()
-            CollectionScreen(
-                cards = collectionBrowser.visibleCards(DemoCards.cards),
-                state = collectionBrowser.uiState,
-                onQueryChange = collectionBrowser::setQuery,
-                onTypesChange = collectionBrowser::setSelectedTypes,
-                onColorsChange = collectionBrowser::setSelectedColors,
-                onSortFieldChange = collectionBrowser::setSortField,
-                onSortDirectionChange = collectionBrowser::setSortDirection,
-                onOpenCard = { cardId ->
-                    navController.navigate(cardDetailsRoute(cardId)) {
-                        launchSingleTop = true
-                    }
-                },
-            )
-        }
-        composable(
-            route = AppDestination.CardDetails.route,
-            arguments = listOf(navArgument("cardId") { type = NavType.StringType }),
-        ) { entry ->
-            val cardId = entry.arguments?.getString("cardId")
-            val card = DemoCards.cards.firstOrNull { it.id == cardId }
-            CardDetailsScreen(card = card)
-        }
+        collectionDestinations(navController)
         composable(AppDestination.Decks.route) {
             MyDecksScreen(
                 decks = decksViewModel.decks,

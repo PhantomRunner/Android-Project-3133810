@@ -54,6 +54,7 @@ internal fun DeckCardsScreen(
     }
     CardBrowser(
         cards = cards,
+        itemKey = Card::id,
         state = state,
         onQueryChange = onQueryChange,
         onTypesChange = onTypesChange,

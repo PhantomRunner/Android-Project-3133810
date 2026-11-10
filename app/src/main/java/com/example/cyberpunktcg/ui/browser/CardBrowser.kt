@@ -41,14 +41,14 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
-import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
 import com.example.cyberpunktcg.ui.components.labelResId
 
 @Composable
-internal fun CardBrowser(
-    cards: List<Card>,
+internal fun <T> CardBrowser(
+    cards: List<T>,
+    itemKey: (T) -> String,
     state: CardBrowserState,
     onQueryChange: (String) -> Unit,
     onTypesChange: (Set<CardType>) -> Unit,
@@ -56,8 +56,8 @@ internal fun CardBrowser(
     onSortFieldChange: (CardSortField) -> Unit,
     onSortDirectionChange: (SortDirection) -> Unit,
     availableTypes: List<CardType> = CardType.entries,
-    header: @Composable () -> Unit,
-    cardContent: @Composable (Card) -> Unit,
+    header: (@Composable () -> Unit)? = null,
+    cardContent: @Composable (T) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
     val focusManager = LocalFocusManager.current
@@ -126,15 +126,15 @@ internal fun CardBrowser(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                header()
+            if (header != null) {
+                item(span = { GridItemSpan(maxLineSpan) }) { header() }
             }
             if (cards.isEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(stringResource(R.string.no_cards_found))
                 }
             }
-            items(items = cards, key = { card -> card.id }) { card ->
+            items(items = cards, key = itemKey) { card ->
                 cardContent(card)
             }
         }

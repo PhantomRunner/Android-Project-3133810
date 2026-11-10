@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     implementation("androidx.navigation:navigation-compose:2.9.8")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
     implementation("androidx.room:room-runtime:2.8.5")
     ksp("androidx.room:room-compiler:2.8.5")
 

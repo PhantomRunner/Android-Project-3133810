@@ -1,5 +1,6 @@
 package com.example.cyberpunktcg.ui.browser
 
+import com.example.cyberpunktcg.data.model.BrowsableCard
 import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
@@ -31,6 +32,23 @@ class SortCardsTest {
     }
 
     @Test
+    fun unknownStatsSortLastInBothDirections() {
+        val zero = cards.first().copy(id = "zero", cost = 0, power = 0, ram = 0)
+        val positive = zero.copy(id = "positive", cost = 1, power = 2, ram = 3)
+        val unknown = object : BrowsableCard by zero {
+            override val id = "unknown"
+            override val cost: Int? = null
+            override val power: Int? = null
+            override val ram: Int? = null
+        }
+        val mixed = listOf(unknown, zero, positive)
+        listOf(CardSortField.COST, CardSortField.POWER, CardSortField.RAM).forEach { field ->
+            assertEquals(listOf("zero", "positive", "unknown"), sortCards(mixed, field, SortDirection.ASCENDING).map { it.id })
+            assertEquals(listOf("positive", "zero", "unknown"), sortCards(mixed, field, SortDirection.DESCENDING).map { it.id })
+        }
+    }
+
+    @Test
     fun colorsAndTypesFollowEnumDeclarationOrderRatherThanLabels() {
         assertOrder(CardSortField.COLOR, SortDirection.ASCENDING, listOf("a", "d", "b", "c"))
         assertOrder(CardSortField.COLOR, SortDirection.DESCENDING, listOf("c", "b", "d", "a"))
@@ -55,7 +73,7 @@ class SortCardsTest {
     fun emptyAndSingleCardListsWorkForEverySortOption() {
         CardSortField.entries.forEach { field ->
             SortDirection.entries.forEach { direction ->
-                assertEquals(emptyList<Card>(), sortCards(emptyList(), field, direction))
+                assertEquals(emptyList<Card>(), sortCards(emptyList<Card>(), field, direction))
                 assertEquals(listOf(cards.first()), sortCards(listOf(cards.first()), field, direction))
             }
         }
