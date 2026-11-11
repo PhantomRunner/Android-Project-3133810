@@ -17,6 +17,7 @@ import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.domain.CardRamWarning
 import com.example.cyberpunktcg.domain.DeckValidation
 import com.example.cyberpunktcg.ui.components.labelResId
+import com.example.cyberpunktcg.ui.components.cardStat
 
 @Composable
 internal fun DeckValidationSummary(validation: DeckValidation) {
@@ -25,7 +26,7 @@ internal fun DeckValidationSummary(validation: DeckValidation) {
             DeckAllowedColorsText(validation)
             Text(stringResource(R.string.deck_ram_limits), style = MaterialTheme.typography.titleMedium)
             CardColor.entries.forEach { color ->
-                Text(stringResource(R.string.deck_color_ram_limit, stringResource(color.labelResId), validation.ramLimits.getValue(color)))
+                Text(stringResource(R.string.deck_color_ram_limit, stringResource(color.labelResId), validation.ramLimits.getValue(color).cardStat()))
             }
             Text(stringResource(R.string.deck_ram_explanation), style = MaterialTheme.typography.bodySmall)
             Text(stringResource(R.string.deck_basic_checks), style = MaterialTheme.typography.titleMedium)
@@ -49,6 +50,10 @@ internal fun DeckValidationSummary(validation: DeckValidation) {
             }
             validation.colorWarnings.forEach { card -> CardColorWarningText(card) }
             validation.ramWarnings.forEach { warning -> CardRamWarningText(warning) }
+            if (validation.hasUnknownRam) ValidationWarning(stringResource(R.string.deck_unknown_ram))
+            validation.ownershipWarnings.forEach { warning ->
+                ValidationWarning(stringResource(R.string.deck_missing_copies, warning.cardName, warning.required, warning.owned))
+            }
             if (!validation.hasWarnings) {
                 Text(stringResource(R.string.deck_no_basic_warnings))
             }

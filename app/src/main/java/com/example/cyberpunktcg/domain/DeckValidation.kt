@@ -16,31 +16,37 @@ internal data class CardRamWarning(
     val availableRam: Int,
 )
 
+internal data class CardOwnershipWarning(val cardName: String, val required: Int, val owned: Int)
+
 internal data class DeckValidation(
     val legendCount: Int,
     val mainCount: Int,
-    val ramLimits: Map<CardColor, Int>,
+    val ramLimits: Map<CardColor, Int?>,
     val allowedColors: Set<CardColor>,
     val colorWarnings: List<Card>,
     val duplicateLegendNames: List<String>,
     val copyWarnings: List<CardCopyWarning>,
     val legendsInMain: List<Card>,
     val ramWarnings: List<CardRamWarning>,
+    val hasUnknownRam: Boolean,
+    val ownershipWarnings: List<CardOwnershipWarning>,
 ) {
     val hasLegendCountWarning: Boolean get() = legendCount != 3
     val hasMainCountWarning: Boolean get() = mainCount !in 40..50
     val hasWarnings: Boolean
         get() = hasLegendCountWarning || hasMainCountWarning || duplicateLegendNames.isNotEmpty() ||
-            copyWarnings.isNotEmpty() || legendsInMain.isNotEmpty() || colorWarnings.isNotEmpty() || ramWarnings.isNotEmpty()
+            copyWarnings.isNotEmpty() || legendsInMain.isNotEmpty() || colorWarnings.isNotEmpty() || ramWarnings.isNotEmpty() ||
+            hasUnknownRam || ownershipWarnings.isNotEmpty()
 }
 
 internal fun selectedLegendColors(deck: Deck, cards: List<Card>): Set<CardColor> {
     return cards.filter { it.type == CardType.LEGEND && it.id in deck.legendIds }.map { it.color }.toSet()
 }
 
-internal fun calculateRamLimits(legends: List<Card>): Map<CardColor, Int> {
+internal fun calculateRamLimits(legends: List<Card>): Map<CardColor, Int?> {
     return CardColor.entries.associateWith { color ->
-        legends.filter { it.type == CardType.LEGEND && it.color == color }.sumOf { it.ram }
+        val matching = legends.filter { it.type == CardType.LEGEND && it.color == color }
+        if (matching.any { it.ram == null }) null else matching.sumOf { requireNotNull(it.ram) }
     }
 }
 
@@ -51,7 +57,7 @@ internal fun countCardCopies(items: List<DeckItem>, cards: List<Card>, card: Car
     return items.filter { it.cardId in matchingIds }.sumOf { it.quantity }
 }
 
-internal fun validateDeck(deck: Deck, cards: List<Card>): DeckValidation {
+internal fun validateDeck(deck: Deck, cards: List<Card>, ownedQuantities: Map<String, Int>? = null): DeckValidation {
     val cardsById = cards.associateBy { it.id }
     val legends = deck.legendIds.mapNotNull { cardsById[it] }.filter { it.type == CardType.LEGEND }
     val mainCards = deck.items.mapNotNull { cardsById[it.cardId] }
@@ -69,7 +75,7 @@ internal fun validateDeck(deck: Deck, cards: List<Card>): DeckValidation {
 
     val ramWarnings = mainCards.mapNotNull { card ->
         val available = limits.getValue(card.color)
-        if (card.ram > available) {
+        if (card.ram != null && available != null && card.ram > available) {
             CardRamWarning(card.id, card.name, card.color, card.ram, available)
         } else null
     }
@@ -84,5 +90,15 @@ internal fun validateDeck(deck: Deck, cards: List<Card>): DeckValidation {
         legendsInMain = deck.items.mapNotNull { cardsById[it.cardId] }
             .filter { it.type == CardType.LEGEND }.distinctBy { it.id },
         ramWarnings = ramWarnings,
+        hasUnknownRam = legends.any { it.ram == null } || mainCards.any { it.ram == null },
+        ownershipWarnings = if (ownedQuantities == null) emptyList() else {
+            val required = deck.items.associate { it.cardId to it.quantity }.toMutableMap()
+            deck.legendIds.forEach { id -> required[id] = (required[id] ?: 0) + 1 }
+            required.mapNotNull { (id, count) ->
+                val owned = ownedQuantities[id] ?: 0
+                val card = cardsById[id]
+                if (owned < count && card != null) CardOwnershipWarning(card.name, count, owned) else null
+            }
+        },
     )
 }

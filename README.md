@@ -16,7 +16,7 @@ The current development build includes the following screens:
 ### Home
 
 - Shortcuts open Collection and My decks while restoring the state of tabs.
-- Shows the number of decks saved in the current session and the three most recently
+- Shows the number of saved decks and the three most recently
   created decks: name, Draft status, Main and Legends counts, and previews of
   selected Legends. Tapping a deck opens its editor; View all decks opens the full
   list. Unsaved edits are not shown here.
@@ -38,22 +38,22 @@ The current development build includes the following screens:
 - Creating a deck with a nonblank name, listing decks with Draft status
   and separate Main/Legends counts, opening the editor, and deleting with confirmation 
   are implemented features.
-- Deck Editor allows renaming a deck and selecting or removing up to three Legends
-  with distinct names with current demo catalog containment only one Legend.
-- Add cards opens a Unit, Program and Gear catalog with search, filters and sorting.
+- Deck Editor allows renaming a deck and selecting or removing up to three owned Legends
+  with distinct names.
+- Add cards browses owned Units, Programs and Gear from the same Room catalog as Collection.
   The +/− buttons change quantities; reducing a quantity to zero removes the card.
   Cards sharing the same name and subtitle are limited to three copies in total. (Legal game rule)
-  Adding a card requires a selected Legend of the same color.
+  Adding a card requires a selected Legend of the same color and an available owned copy.
+  Quantities from different printings of one card are added together.
 - Shows the deck composition, RAM limits for all four colors, and warnings about
   the Legend count, Main size (40–50), colors and RAM limits overflow.
   Incomplete decks can be saved as Drafts.
-- Save draft saves the working copy within the current session. Using Back with
+- Save draft writes the working copy to Room. Using Back with
   unsaved edits offers a choice to discard changes or keep editing.
 - Deck Preview shows the current working copy, with Legends separate from Main,
   copy counts and access to full card details. Previewing does not save changes.
-- Decks and edits survive screen rotation and tab switching, but are reset when
-  the app process ends. Persistent storage, deck list sharing and shake-to-shuffle
-  are not implemented yet.
+- Saved decks survive app restarts. Collection changes update availability and
+  warnings about missing copies while retaining saved deck entries.
 
 ### Scanner
 
@@ -93,7 +93,7 @@ The app follows a simple MVVM structure. Compose screens display state from
 ViewModels and pass user actions back to them. When the state changes, Compose
 updates the parts of the screen that use it.
 
-- Collection, the local Add cards screen and the demo deck browser share
+- Collection, the local Add cards screen and the deck browser share
   `CardBrowserViewModel` logic. Each keeps its own search, filters and sort order.
 - `DecksViewModel` is shared by Home and the deck screens. The editor and Preview
   show the working copy while you edit. Save draft updates the version shown on
@@ -106,9 +106,9 @@ updates the parts of the screen that use it.
 
 #### State and storage
 
-- **Decks** stay in memory for the current session, including saved drafts and
-  unsaved edits. They survive tab switches and screen rotation. The deck list
-  starts empty when the app process restarts.
+- **Decks** and their ordered Legends and Main entries are stored in separate Room
+  tables linked to gameplay card IDs. Unsaved working copies stay in the ViewModel.
+  Room's version 1-to-2 automatic migration adds the deck tables and keeps the collection.
 - **Browsing state** uses Android's saved UI state. `SavedStateHandle` keeps the
   search, filters and sort order. Compose Navigation saves the back stack and
   Compose saves the grid position. Android can restore these when it recreates

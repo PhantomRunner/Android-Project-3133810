@@ -7,9 +7,11 @@ import java.io.FileNotFoundException
 
 internal const val COLLECTION_ASSET_DIRECTORY = "collection"
 
-internal class CollectionRepository(context: Context) {
+internal class CollectionRepository(
+    context: Context,
+    private val dao: CollectionDao = CollectionDatabase.get(context).collectionDao(),
+) {
     private val assets = context.applicationContext.assets
-    private val dao = CollectionDatabase.get(context).collectionDao()
 
     val printings = dao.observePrintings()
 

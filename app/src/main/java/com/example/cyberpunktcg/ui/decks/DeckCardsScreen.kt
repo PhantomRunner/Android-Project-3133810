@@ -41,6 +41,7 @@ internal fun DeckCardsScreen(
     onSortFieldChange: (CardSortField) -> Unit,
     onSortDirectionChange: (SortDirection) -> Unit,
     canAddCard: (String) -> Boolean,
+    ownedQuantity: (String) -> Int,
     onAddCard: (String) -> Unit,
     onRemoveCard: (String) -> Unit,
     onBackToDecks: () -> Unit,
@@ -77,6 +78,7 @@ internal fun DeckCardsScreen(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CardPreviewTile(card = card, modifier = Modifier.fillMaxWidth())
                 Text(stringResource(R.string.deck_card_copies, quantity))
+                Text(stringResource(R.string.collection_owned_count, ownedQuantity(card.id)))
                 if (validation != null && card.color !in validation.allowedColors) {
                     CardColorWarningText(card)
                 }

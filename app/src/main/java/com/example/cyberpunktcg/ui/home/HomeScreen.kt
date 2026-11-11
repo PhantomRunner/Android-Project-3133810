@@ -88,7 +88,7 @@ internal fun HomeScreen(
             }
         }
         Text(
-            text = stringResource(R.string.deck_session_notice),
+            text = stringResource(R.string.deck_storage_notice),
             style = MaterialTheme.typography.bodyMedium,
         )
     }

@@ -2,6 +2,7 @@ package com.example.cyberpunktcg.data.local.collection
 
 import android.content.Context
 import androidx.room.Dao
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Query
 import androidx.room.Room
@@ -9,16 +10,25 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Upsert
+import com.example.cyberpunktcg.data.local.decks.DeckDao
+import com.example.cyberpunktcg.data.local.decks.DeckEntity
+import com.example.cyberpunktcg.data.local.decks.DeckItemEntity
+import com.example.cyberpunktcg.data.local.decks.DeckLegendEntity
 import kotlinx.coroutines.flow.Flow
 
 @Database(
-    entities = [CardEntity::class, CardSetEntity::class, CardPrintingEntity::class, OwnedPrintingEntity::class],
-    version = 1,
+    entities = [
+        CardEntity::class, CardSetEntity::class, CardPrintingEntity::class, OwnedPrintingEntity::class,
+        DeckEntity::class, DeckLegendEntity::class, DeckItemEntity::class,
+    ],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
     exportSchema = true,
 )
 @TypeConverters(CollectionConverters::class)
 internal abstract class CollectionDatabase : RoomDatabase() {
     abstract fun collectionDao(): CollectionDao
+    abstract fun deckDao(): DeckDao
 
     companion object {
         @Volatile private var instance: CollectionDatabase? = null

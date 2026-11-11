@@ -1,6 +1,5 @@
 package com.example.cyberpunktcg.ui.collection
 
-import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -30,14 +27,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.cyberpunktcg.R
-import com.example.cyberpunktcg.data.local.collection.COLLECTION_ASSET_DIRECTORY
 import com.example.cyberpunktcg.data.local.collection.CardEntity
 import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import com.example.cyberpunktcg.ui.components.labelResId
+import com.example.cyberpunktcg.ui.components.CardArtwork
 import com.example.cyberpunktcg.ui.theme.frameColor
-import java.io.File
 
 @Composable
 internal fun CollectionCardPreview(
@@ -58,7 +53,7 @@ internal fun CollectionCardPreview(
             }
             Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
             CollectionCardStats(card, MaterialTheme.typography.labelMedium)
-            CollectionCardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().height(132.dp))
+            CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().height(132.dp))
             if (actionLabel != null) {
                 Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
             }
@@ -86,23 +81,8 @@ internal fun CollectionCardDetailsScreen(printing: CollectionPrinting?) {
         CollectionCardStats(card, MaterialTheme.typography.bodyLarge)
         if (card.unitTypes.isNotEmpty()) Text(card.unitTypes.joinToString(" • "))
         if (card.eddies == true) Text(stringResource(R.string.card_sell_indicator))
-        CollectionCardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().aspectRatio(0.72f))
+        CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().aspectRatio(0.72f))
     }
-}
-
-@Composable
-private fun CollectionCardArtwork(path: String?, modifier: Modifier) {
-    val placeholder = painterResource(R.drawable.card_art_placeholder)
-    val assetUri = path?.let { Uri.fromFile(File("/android_asset/$COLLECTION_ASSET_DIRECTORY/$it")) }
-    AsyncImage(
-        model = assetUri,
-        contentDescription = null,
-        modifier = modifier,
-        contentScale = ContentScale.Fit,
-        placeholder = placeholder,
-        error = placeholder,
-        fallback = placeholder,
-    )
 }
 
 @Composable

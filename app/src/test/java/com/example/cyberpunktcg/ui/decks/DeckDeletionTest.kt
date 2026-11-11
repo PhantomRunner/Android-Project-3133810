@@ -6,11 +6,13 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class DeckDeletionTest {
+    @get:org.junit.Rule val modelRule = DecksTestRule()
     @Test
-    fun deletingByIdRemovesSavedAndWorkingCopiesButKeepsSameNameDeck() {
-        val model = DecksViewModel()
+    fun deletingByIdRemovesSavedAndWorkingCopiesButKeepsSameNameDeck() = runTest {
+        val model = modelRule.createModel()
         val first = model.createDeck("Same name")!!
         val second = model.createDeck("Same name")!!
         model.addLegend(first.id, "demo1")
@@ -43,8 +45,8 @@ class DeckDeletionTest {
     }
 
     @Test
-    fun missingAndRepeatedDeletesAreSafeAndLastDeleteAllowsFreshCreation() {
-        val model = DecksViewModel()
+    fun missingAndRepeatedDeletesAreSafeAndLastDeleteAllowsFreshCreation() = runTest {
+        val model = modelRule.createModel()
         model.deleteDeck("missing")
         assertTrue(model.decks.isEmpty())
         val deck = model.createDeck("Last")!!

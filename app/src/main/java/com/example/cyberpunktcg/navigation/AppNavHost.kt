@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,12 +12,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.cyberpunktcg.data.sample.DemoCards
 import com.example.cyberpunktcg.ui.card.CardDetailsScreen
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 import com.example.cyberpunktcg.ui.decks.DeckCardsScreen
@@ -24,12 +27,14 @@ import com.example.cyberpunktcg.ui.decks.DeckEditorScreen
 import com.example.cyberpunktcg.ui.decks.DeckPreviewScreen
 import com.example.cyberpunktcg.ui.decks.DeckNotFoundScreen
 import com.example.cyberpunktcg.ui.decks.DecksViewModel
+import com.example.cyberpunktcg.ui.decks.DeckDataState
 import com.example.cyberpunktcg.ui.decks.MyDecksScreen
 import com.example.cyberpunktcg.ui.home.HomeScreen
 import com.example.cyberpunktcg.ui.scanner.ScannerScreen
 import com.example.cyberpunktcg.ui.scanner.ScannerViewModel
 import com.example.cyberpunktcg.ui.settings.SettingsScreen
 import java.io.File
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun AppNavHost(
@@ -41,6 +46,7 @@ internal fun AppNavHost(
     onTabSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
     val onBackToDecks: () -> Unit = {
         if (!navController.popBackStack(AppDestination.Decks.route, false)) {
             navController.navigate(AppDestination.Decks.route) { launchSingleTop = true }
@@ -51,7 +57,7 @@ internal fun AppNavHost(
         startDestination = AppDestination.Home.route,
         modifier = modifier,
     ) {
-        composable(AppDestination.Home.route) {
+        deckDestination(AppDestination.Home, decksViewModel) {
             val decks = decksViewModel.decks
             val recentDecks = decks.takeLast(3).asReversed()
             val legendsByDeck = recentDecks.associate { deck ->
@@ -77,15 +83,17 @@ internal fun AppNavHost(
             )
         }
         collectionDestinations(navController)
-        composable(AppDestination.Decks.route) {
+        deckDestination(AppDestination.Decks, decksViewModel) {
             MyDecksScreen(
                 decks = decksViewModel.decks,
-                onDeleteDeck = decksViewModel::deleteDeck,
+                onDeleteDeck = { id -> scope.launch { decksViewModel.deleteDeck(id) } },
                 onCreateDeck = { name ->
-                    val deck = decksViewModel.createDeck(name)
-                    if (deck != null) {
-                        navController.navigate(deckEditorRoute(deck.id)) {
-                            launchSingleTop = true
+                    scope.launch {
+                        val deck = decksViewModel.createDeck(name)
+                        if (deck != null && navController.currentDestination?.route == AppDestination.Decks.route) {
+                            navController.navigate(deckEditorRoute(deck.id)) {
+                                launchSingleTop = true
+                            }
                         }
                     }
                 },
@@ -96,8 +104,9 @@ internal fun AppNavHost(
                 },
             )
         }
-        composable(
-            route = AppDestination.DeckEditor.route,
+        deckDestination(
+            destination = AppDestination.DeckEditor,
+            decksViewModel = decksViewModel,
             arguments = listOf(navArgument("deckId") { type = NavType.StringType }),
         ) { entry ->
             val deckId = entry.arguments?.getString("deckId")
@@ -107,7 +116,10 @@ internal fun AppNavHost(
                 validation = decksViewModel.validation(deckId),
                 onBack = onEditorBack,
                 legends = decksViewModel.legends,
+                ownedLegends = decksViewModel.ownedLegends,
+                ownedQuantity = decksViewModel::ownedQuantity,
                 mainCards = decksViewModel.mainCards,
+                isSaving = decksViewModel.isSaving,
                 onAddCards = { deckId?.let { navController.navigate(deckCardsRoute(it)) { launchSingleTop = true } } },
                 onPreview = { deckId?.let { navController.navigate(deckPreviewRoute(it)) { launchSingleTop = true } } },
                 hasUnsavedChanges = decksViewModel.hasUnsavedChanges(deckId),
@@ -115,12 +127,13 @@ internal fun AppNavHost(
                 canAddLegend = { cardId -> deckId != null && decksViewModel.canAddLegend(deckId, cardId) },
                 onAddLegend = { cardId -> deckId?.let { decksViewModel.addLegend(it, cardId) } },
                 onRemoveLegend = { cardId -> deckId?.let { decksViewModel.removeLegend(it, cardId) } },
-                onSaveDraft = { deckId?.let { decksViewModel.saveDraft(it) } },
+                onSaveDraft = { deckId?.let { scope.launch { decksViewModel.saveDraft(it) } } },
                 onBackToDecks = onBackToDecks,
             )
         }
-        composable(
-            route = AppDestination.DeckCards.route,
+        deckDestination(
+            destination = AppDestination.DeckCards,
+            decksViewModel = decksViewModel,
             arguments = listOf(navArgument("deckId") { type = NavType.StringType }),
         ) { entry ->
             val deckId = entry.arguments?.getString("deckId")
@@ -136,7 +149,7 @@ internal fun AppNavHost(
             DeckCardsScreen(
                 deck = deck,
                 validation = decksViewModel.validation(deckId),
-                cards = browser.visibleCards(decksViewModel.mainCards),
+                cards = browser.visibleCards(decksViewModel.selectableMainCards(deckId)),
                 state = browser.uiState,
                 onQueryChange = browser::setQuery,
                 onTypesChange = browser::setSelectedTypes,
@@ -144,13 +157,15 @@ internal fun AppNavHost(
                 onSortFieldChange = browser::setSortField,
                 onSortDirectionChange = browser::setSortDirection,
                 canAddCard = { cardId -> deckId != null && decksViewModel.canAddCard(deckId, cardId) },
+                ownedQuantity = decksViewModel::ownedQuantity,
                 onAddCard = { cardId -> deckId?.let { decksViewModel.addCard(it, cardId) } },
                 onRemoveCard = { cardId -> deckId?.let { decksViewModel.removeCard(it, cardId) } },
                 onBackToDecks = onBackToDecks,
             )
         }
-        composable(
-            route = AppDestination.DeckPreview.route,
+        deckDestination(
+            destination = AppDestination.DeckPreview,
+            decksViewModel = decksViewModel,
             arguments = listOf(navArgument("deckId") { type = NavType.StringType }),
         ) { entry ->
             val deckId = entry.arguments?.getString("deckId")
@@ -164,8 +179,9 @@ internal fun AppNavHost(
                 onBackToDecks = onBackToDecks,
             )
         }
-        composable(
-            route = AppDestination.DeckCardDetails.route,
+        deckDestination(
+            destination = AppDestination.DeckCardDetails,
+            decksViewModel = decksViewModel,
             arguments = listOf(
                 navArgument("deckId") { type = NavType.StringType },
                 navArgument("cardId") { type = NavType.StringType },
@@ -176,8 +192,8 @@ internal fun AppNavHost(
                 DeckNotFoundScreen(onBackToDecks)
             } else {
                 val cardId = entry.arguments?.getString("cardId")
-                val card = DemoCards.cards.firstOrNull { card ->
-                    card.id == cardId && (card.id in deck.legendIds || deck.items.any { it.cardId == card.id })
+                val card = decksViewModel.findCard(cardId)?.takeIf { card ->
+                    card.id in deck.legendIds || deck.items.any { it.cardId == card.id }
                 }
                 CardDetailsScreen(card)
             }
@@ -206,5 +222,16 @@ internal fun AppNavHost(
                 onDarkThemeChange = onDarkThemeChange,
             )
         }
+    }
+}
+
+private fun NavGraphBuilder.deckDestination(
+    destination: AppDestination,
+    decksViewModel: DecksViewModel,
+    arguments: List<NamedNavArgument> = emptyList(),
+    content: @Composable (NavBackStackEntry) -> Unit,
+) {
+    composable(destination.route, arguments) { entry ->
+        DeckDataState(decksViewModel) { content(entry) }
     }
 }

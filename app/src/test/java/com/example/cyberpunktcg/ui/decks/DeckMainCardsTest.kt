@@ -7,15 +7,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class DeckMainCardsTest {
+    @get:org.junit.Rule val modelRule = DecksTestRule()
     @Test
-    fun copyLimitIsSharedAcrossPrintIdsButNotDifferentSubtitles() {
+    fun copyLimitIsSharedAcrossPrintIdsButNotDifferentSubtitles() = runTest {
         val card = DemoCards.cards[1]
         val otherPrint = card.copy(id = "another-print")
         val otherSubtitle = card.copy(id = "other-subtitle", subtitle = "Different")
         val legend = DemoCards.cards.first().copy(color = card.color)
-        val model = DecksViewModel(listOf(legend, card, otherPrint, otherSubtitle))
+        val model = modelRule.createModel(listOf(legend, card, otherPrint, otherSubtitle))
         val deck = model.createDeck("Copies")!!
         model.addLegend(deck.id, legend.id)
         model.addCard(deck.id, card.id)
@@ -33,9 +35,9 @@ class DeckMainCardsTest {
     }
 
     @Test
-    fun removingLastCopyDeletesEntryAndNeverMakesNegativeQuantities() {
+    fun removingLastCopyDeletesEntryAndNeverMakesNegativeQuantities() = runTest {
         val legend = DemoCards.cards.first().copy(color = CardColor.YELLOW)
-        val model = DecksViewModel(DemoCards.cards.drop(1) + legend)
+        val model = modelRule.createModel(DemoCards.cards.drop(1) + legend)
         val deck = model.createDeck("Remove")!!
         model.addLegend(deck.id, legend.id)
         model.saveDraft(deck.id)
@@ -52,8 +54,8 @@ class DeckMainCardsTest {
     }
 
     @Test
-    fun onlySelectedMainColorsCanBeAddedAndDeckIdsRemainIndependent() {
-        val model = DecksViewModel()
+    fun onlySelectedMainColorsCanBeAddedAndDeckIdsRemainIndependent() = runTest {
+        val model = modelRule.createModel()
         val first = model.createDeck("First")!!
         val second = model.createDeck("Second")!!
         assertEquals(listOf("demo2", "demo3", "demo4", "demo5", "demo6"), model.mainCards.map { it.id })
@@ -75,8 +77,8 @@ class DeckMainCardsTest {
     }
 
     @Test
-    fun saveAndDiscardIncludeItemsAndLegendEditsNeverRemoveThem() {
-        val model = DecksViewModel()
+    fun saveAndDiscardIncludeItemsAndLegendEditsNeverRemoveThem() = runTest {
+        val model = modelRule.createModel()
         val deck = model.createDeck("Saved")!!
         model.addLegend(deck.id, "demo1")
         model.addCard(deck.id, "demo5")

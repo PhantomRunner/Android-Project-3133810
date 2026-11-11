@@ -8,10 +8,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class DeckColorEligibilityTest {
+    @get:org.junit.Rule val modelRule = DecksTestRule()
     @Test
-    fun everyMainTypeRequiresAMatchingLegendEvenWhenRamIsZero() {
+    fun everyMainTypeRequiresAMatchingLegendEvenWhenRamIsZero() = runTest {
         for (color in CardColor.entries) {
             val legend = DemoCards.cards[0].copy(color = color, ram = 0)
             val main = CardColor.entries.flatMap { cardColor ->
@@ -19,7 +21,7 @@ class DeckColorEligibilityTest {
                     DemoCards.cards[1].copy(id = "$cardColor-$type", name = "$cardColor $type", color = cardColor, type = type, ram = 0)
                 }
             }
-            val model = DecksViewModel(listOf(legend) + main)
+            val model = modelRule.createModel(listOf(legend) + main)
             val deck = model.createDeck("Colors")!!
             main.forEach { card ->
                 assertFalse(model.canAddCard(deck.id, card.id))
@@ -38,10 +40,10 @@ class DeckColorEligibilityTest {
     }
 
     @Test
-    fun multipleColorsFormAUnionAndRemovingOneKeepsItemsButBlocksMore() {
+    fun multipleColorsFormAUnionAndRemovingOneKeepsItemsButBlocksMore() = runTest {
         val red = DemoCards.cards[0]
         val blue = red.copy(id = "blue-legend", name = "Blue legend", color = CardColor.BLUE)
-        val model = DecksViewModel(DemoCards.cards + blue)
+        val model = modelRule.createModel(DemoCards.cards + blue)
         val deck = model.createDeck("Two colors")!!
         model.addLegend(deck.id, red.id)
         model.addLegend(deck.id, blue.id)

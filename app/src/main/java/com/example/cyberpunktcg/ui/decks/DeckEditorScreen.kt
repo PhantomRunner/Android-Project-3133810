@@ -40,6 +40,7 @@ import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 import com.example.cyberpunktcg.domain.DeckValidation
 import com.example.cyberpunktcg.ui.components.labelResId
+import com.example.cyberpunktcg.ui.components.cardStat
 import com.example.cyberpunktcg.ui.theme.frameColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +50,10 @@ internal fun DeckEditorScreen(
     validation: DeckValidation?,
     onBack: () -> Unit,
     legends: List<Card>,
+    ownedLegends: List<Card>,
+    ownedQuantity: (String) -> Int,
     mainCards: List<Card>,
+    isSaving: Boolean,
     onAddCards: () -> Unit,
     onPreview: () -> Unit,
     hasUnsavedChanges: Boolean,
@@ -75,7 +79,7 @@ internal fun DeckEditorScreen(
             }
         } else {
             Text(stringResource(R.string.deck_draft), style = MaterialTheme.typography.labelLarge)
-            Text(stringResource(R.string.deck_session_notice))
+            Text(stringResource(R.string.deck_storage_notice))
             OutlinedTextField(
                 value = deck.name,
                 onValueChange = onNameChange,
@@ -89,7 +93,7 @@ internal fun DeckEditorScreen(
             )
             Button(
                 onClick = onSaveDraft,
-                enabled = deck.name.isNotBlank() && hasUnsavedChanges,
+                enabled = deck.name.isNotBlank() && hasUnsavedChanges && !isSaving,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.save_draft)) }
             OutlinedButton(
@@ -120,7 +124,7 @@ internal fun DeckEditorScreen(
                             Text(legend.name, style = MaterialTheme.typography.titleMedium)
                             Text(legend.subtitle)
                             Text(stringResource(legend.color.labelResId))
-                            Text(stringResource(R.string.card_ram, legend.ram))
+                            Text(stringResource(R.string.card_ram, legend.ram.cardStat()))
                             TextButton(onClick = { onRemoveLegend(legend.id) }) {
                                 Text(stringResource(R.string.remove_legend))
                             }
@@ -181,13 +185,17 @@ internal fun DeckEditorScreen(
                     Text(stringResource(R.string.choose_legend), style = MaterialTheme.typography.titleLarge)
                     Text(stringResource(R.string.legend_selection_hint))
                 }
-                items(legends, key = { it.id }) { legend ->
+                if (ownedLegends.isEmpty()) {
+                    item { Text(stringResource(R.string.deck_no_owned_legends)) }
+                }
+                items(ownedLegends, key = { it.id }) { legend ->
                     OutlinedCard(modifier = Modifier.fillMaxWidth(), border = BorderStroke(2.dp, legend.color.frameColor)) {
                         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(legend.name, style = MaterialTheme.typography.titleMedium)
                             Text(legend.subtitle)
                             Text(stringResource(legend.color.labelResId))
-                            Text(stringResource(R.string.card_ram, legend.ram))
+                            Text(stringResource(R.string.card_ram, legend.ram.cardStat()))
+                            Text(stringResource(R.string.collection_owned_count, ownedQuantity(legend.id)))
                             Button(
                                 enabled = canAddLegend(legend.id),
                                 onClick = {

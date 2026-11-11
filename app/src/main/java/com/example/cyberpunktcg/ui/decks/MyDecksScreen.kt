@@ -53,7 +53,7 @@ internal fun MyDecksScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            stringResource(R.string.deck_session_notice),
+            stringResource(R.string.deck_storage_notice),
             style = MaterialTheme.typography.bodyMedium,
         )
         Button(

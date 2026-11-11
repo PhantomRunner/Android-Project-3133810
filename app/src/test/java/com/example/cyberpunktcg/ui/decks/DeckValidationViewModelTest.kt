@@ -6,13 +6,15 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class DeckValidationViewModelTest {
+    @get:org.junit.Rule val modelRule = DecksTestRule()
     @Test
-    fun warningsFollowWorkingLegendsWithoutRemovingItemsOrBlockingSave() {
+    fun warningsFollowWorkingLegendsWithoutRemovingItemsOrBlockingSave() = runTest {
         val redLegend = DemoCards.cards.first()
         val extraRed = DemoCards.cards[3].copy(color = redLegend.color)
-        val model = DecksViewModel(DemoCards.cards.filterNot { it.id == redLegend.id || it.id == extraRed.id } + redLegend + extraRed)
+        val model = modelRule.createModel(DemoCards.cards.filterNot { it.id == redLegend.id || it.id == extraRed.id } + redLegend + extraRed)
         val deck = model.createDeck("RAM draft")!!
         model.addLegend(deck.id, "demo1")
         model.addCard(deck.id, "demo5")

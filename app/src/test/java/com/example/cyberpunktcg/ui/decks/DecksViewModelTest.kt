@@ -12,11 +12,13 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
 
 class DecksViewModelTest {
+    @get:org.junit.Rule val modelRule = DecksTestRule()
     @Test
-    fun blankNamesDoNotCreateOrChangeDecks() {
-        val viewModel = DecksViewModel()
+    fun blankNamesDoNotCreateOrChangeDecks() = runTest {
+        val viewModel = modelRule.createModel()
         assertNull(viewModel.createDeck(""))
         assertEquals(emptyList<Deck>(), viewModel.decks)
         val deck = viewModel.createDeck("Keep me")!!
@@ -25,8 +27,8 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun creationTrimsNameAndStartsWithAnEmptyDeckAndUuid() {
-        val viewModel = DecksViewModel()
+    fun creationTrimsNameAndStartsWithAnEmptyDeckAndUuid() = runTest {
+        val viewModel = modelRule.createModel()
         val deck = viewModel.createDeck("  Neon Crew  ")!!
         assertEquals("Neon Crew", deck.name)
         assertNotNull(UUID.fromString(deck.id))
@@ -37,8 +39,8 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun duplicateNamesRemainSeparateAndLookupUsesIds() {
-        val viewModel = DecksViewModel()
+    fun duplicateNamesRemainSeparateAndLookupUsesIds() = runTest {
+        val viewModel = modelRule.createModel()
         val first = viewModel.createDeck("Same name")!!
         val second = viewModel.createDeck("Same name")!!
         assertNotEquals(first.id, second.id)
@@ -50,7 +52,7 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun mainCountCountsCopiesAndExcludesLegends() {
+    fun mainCountCountsCopiesAndExcludesLegends() = runTest {
         val deck = Deck(
             id = "deck1",
             name = "Counting example",
@@ -62,8 +64,8 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun editsStaySeparateUntilSaveAndDiscardRestoresLastSave() {
-        val viewModel = DecksViewModel()
+    fun editsStaySeparateUntilSaveAndDiscardRestoresLastSave() = runTest {
+        val viewModel = modelRule.createModel()
         val deck = viewModel.createDeck("Original")!!
         viewModel.renameDeck(deck.id, "  Renamed  ")
         viewModel.addLegend(deck.id, "demo1")
@@ -85,8 +87,8 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun blankSaveIsRejectedAndRevertingChangesIsClean() {
-        val viewModel = DecksViewModel()
+    fun blankSaveIsRejectedAndRevertingChangesIsClean() = runTest {
+        val viewModel = modelRule.createModel()
         val deck = viewModel.createDeck("Keep")!!
         viewModel.renameDeck(deck.id, "  ")
         assertFalse(viewModel.saveDraft(deck.id))
@@ -101,14 +103,14 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun legendsRequireDistinctNamesAndNeverExceedThree() {
+    fun legendsRequireDistinctNamesAndNeverExceedThree() = runTest {
         val first = DemoCards.cards.first()
         val sameName = first.copy(id = "other-print", subtitle = "Different subtitle")
         val second = first.copy(id = "second", name = "Second")
         val third = first.copy(id = "third", name = "Third")
         val fourth = first.copy(id = "fourth", name = "Fourth")
         val unit = first.copy(id = "unit", type = CardType.UNIT)
-        val viewModel = DecksViewModel(listOf(first, sameName, second, third, fourth, unit))
+        val viewModel = modelRule.createModel(listOf(first, sameName, second, third, fourth, unit))
         val deck = viewModel.createDeck("Limits")!!
         viewModel.addLegend(deck.id, first.id)
         assertFalse(viewModel.canAddLegend(deck.id, first.id))
@@ -129,8 +131,8 @@ class DecksViewModelTest {
     }
 
     @Test
-    fun draftsAreIsolatedByIdAndMissingIdsCannotCreateDecks() {
-        val viewModel = DecksViewModel()
+    fun draftsAreIsolatedByIdAndMissingIdsCannotCreateDecks() = runTest {
+        val viewModel = modelRule.createModel()
         val first = viewModel.createDeck("First")!!
         val second = viewModel.createDeck("Second")!!
         viewModel.renameDeck(first.id, "First draft")
@@ -152,6 +154,6 @@ class DecksViewModelTest {
         assertFalse(viewModel.hasUnsavedChanges("missing"))
         assertNull(viewModel.editingDeck(null))
         assertEquals(2, viewModel.decks.size)
-        assertTrue(DecksViewModel().decks.isEmpty())
+        assertTrue(modelRule.createModel().decks.isEmpty())
     }
 }
