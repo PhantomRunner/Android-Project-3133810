@@ -44,6 +44,7 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
     fun hasCameraPermission(): Boolean = ContextCompat.checkSelfPermission(
         context, Manifest.permission.CAMERA,
     ) == PackageManager.PERMISSION_GRANTED

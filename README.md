@@ -3,20 +3,6 @@
 A small, offline-first Android college project for managing a physical card
 collection and saved decks.
 
-## Local collection assets
-
-With the private color catalogs and `card-images` directory under `docs`, run
-`python3 scripts/prepare_local_collection.py` to prepare the debug asset package.
-Rerun the script after updating the source catalog. Gradle reads the package from
-the ignored `local-assets` directory in local debug builds. Keep the downloaded
-files, the generated package and APKs containing it outside Git.
-
-Room uses SQLite to store catalog records and the quantity owned for each printing.
-KSP generates the database implementation. The exported Room schema under
-`app/schemas` describes the tables and relationships.
-Coil loads each image from the bundled local assets and displays a placeholder
-when an image is unavailable.
-
 ## Development build
 
 The current development build includes the following screens:
@@ -131,5 +117,3 @@ updates the parts of the screen that use it.
   photo stays in review through rotation or a return from the background while
   the process is alive. Retake or leaving Scanner discards the photo. After a
   process restart, Scanner starts a new capture session and clears leftover files.
-- **Between launches**, Room preserves ownership by printing ID and `ThemePreferences`
-  restores the Light/Dark choice from `SharedPreferences`.
