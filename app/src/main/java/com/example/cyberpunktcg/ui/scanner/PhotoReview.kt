@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -50,7 +50,7 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
-            modifier = Modifier.weight(1f).fillMaxWidth().background(Color.Black),
+            modifier = Modifier.weight(1f).fillMaxWidth().background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
             val image = bitmap
@@ -65,7 +65,7 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
                 else -> Text(
                     stringResource(R.string.camera_photo_unavailable),
                     modifier = Modifier.padding(16.dp),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                 )
             }

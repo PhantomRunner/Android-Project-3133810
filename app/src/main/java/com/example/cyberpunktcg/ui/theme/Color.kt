@@ -9,6 +9,9 @@ internal val CardFrameYellow = Color(0xFFA67C00)
 internal val CardFrameBlue = Color(0xFF357AC4)
 internal val CardFrameGreen = Color(0xFF27844A)
 
+internal val TransparentSystemBar = Color.Transparent
+internal val LegacyNavigationBarScrim = Color.Black
+
 internal val DarkColors = darkColorScheme(
     primary = Color(0xFF73D7E5),
     onPrimary = Color(0xFF00363E),
