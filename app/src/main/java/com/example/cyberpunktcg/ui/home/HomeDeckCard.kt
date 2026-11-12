@@ -3,8 +3,10 @@ package com.example.cyberpunktcg.ui.home
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
@@ -46,9 +48,12 @@ internal fun HomeDeckCard(deck: Deck, legends: List<Card>, onClick: () -> Unit) 
                 Text(stringResource(R.string.no_legends_selected), style = MaterialTheme.typography.bodySmall)
             } else {
                 val shownLegends = legends.take(3)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     shownLegends.forEach { card ->
-                        LegendPreview(card, Modifier.weight(1f))
+                        LegendPreview(card, Modifier.weight(1f).fillMaxHeight())
                     }
 
                     repeat(3 - shownLegends.size) { Spacer(Modifier.weight(1f)) }
