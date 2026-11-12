@@ -4,6 +4,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
+internal val CardFrameRed = Color(0xFFD64550)
+internal val CardFrameYellow = Color(0xFFA67C00)
+internal val CardFrameBlue = Color(0xFF357AC4)
+internal val CardFrameGreen = Color(0xFF27844A)
 
 internal val DarkColors = darkColorScheme(
     primary = Color(0xFF73D7E5),
