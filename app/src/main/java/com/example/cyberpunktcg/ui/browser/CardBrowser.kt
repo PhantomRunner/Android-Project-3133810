@@ -2,11 +2,17 @@ package com.example.cyberpunktcg.ui.browser
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -26,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -124,24 +131,46 @@ internal fun <T> CardBrowser(
                 modifier = Modifier.weight(1.2f).widthIn(min = 112.dp * fontScale),
             )
         }
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(150.dp * fontScale),
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            state = gridState,
-            contentPadding = PaddingValues(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (header != null) {
-                item(span = { GridItemSpan(maxLineSpan) }) { header() }
-            }
-            if (cards.isEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(stringResource(R.string.no_cards_found))
+        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val spacing = 12.dp
+            val columnCount = ((maxWidth + spacing) / (150.dp * fontScale + spacing)).toInt().coerceAtLeast(1)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(columnCount),
+                modifier = Modifier.fillMaxSize(),
+                state = gridState,
+                contentPadding = PaddingValues(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing),
+            ) {
+                if (header != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) { header() }
                 }
-            }
-            items(items = cards, key = itemKey) { card ->
-                cardContent(card)
+                if (cards.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Text(stringResource(R.string.no_cards_found))
+                    }
+                }
+                items(
+                    items = cards.chunked(columnCount),
+                    key = { row -> itemKey(row.first()) },
+                    span = { GridItemSpan(maxLineSpan) },
+                ) { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(spacing),
+                    ) {
+                        row.forEach { card ->
+                            key(itemKey(card)) {
+                                Box(
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                    propagateMinConstraints = true,
+                                ) {
+                                    cardContent(card)
+                                }
+                            }
+                        }
+                        repeat(columnCount - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
             }
         }
     }

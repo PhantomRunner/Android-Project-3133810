@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,6 +64,7 @@ internal fun CollectionCardPreview(
         Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
         CollectionCardStats(card, MaterialTheme.typography.labelMedium)
         if (actionLabel != null) {
+            Spacer(Modifier.weight(1f))
             Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
         }
     }
