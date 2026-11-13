@@ -2,6 +2,7 @@ package com.example.cyberpunktcg.ui.decks
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Card
@@ -27,7 +29,9 @@ import com.example.cyberpunktcg.ui.browser.CardBrowser
 import com.example.cyberpunktcg.ui.browser.CardBrowserState
 import com.example.cyberpunktcg.ui.browser.CardSortField
 import com.example.cyberpunktcg.ui.browser.SortDirection
-import com.example.cyberpunktcg.ui.components.CardPreviewTile
+import com.example.cyberpunktcg.ui.components.CardArtworkFrame
+import com.example.cyberpunktcg.ui.components.cardStat
+import com.example.cyberpunktcg.ui.components.labelResId
 
 @Composable
 internal fun DeckCardsScreen(
@@ -76,7 +80,7 @@ internal fun DeckCardsScreen(
             val addLabel = stringResource(R.string.add_card_copy, card.name)
             val removeLabel = stringResource(R.string.remove_card_copy, card.name)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CardPreviewTile(card = card, modifier = Modifier.fillMaxWidth())
+                DeckBrowserCardPreview(card)
                 Text(stringResource(R.string.deck_card_copies, quantity))
                 Text(stringResource(R.string.collection_owned_count, ownedQuantity(card.id)))
                 if (validation != null && card.color !in validation.allowedColors) {
@@ -102,4 +106,35 @@ internal fun DeckCardsScreen(
             }
         },
     )
+}
+
+@Composable
+private fun DeckBrowserCardPreview(card: Card) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CardArtworkFrame(card.imagePath, card.color, Modifier.fillMaxWidth())
+        Text(
+            card.name,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (card.subtitle.isNotBlank()) {
+            Text(
+                card.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(stringResource(R.string.card_cost, card.cost.cardStat()), style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.card_power, card.powerLabel ?: card.power.cardStat()), style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.card_ram, card.ram.cardStat()), style = MaterialTheme.typography.labelMedium)
+        }
+    }
 }

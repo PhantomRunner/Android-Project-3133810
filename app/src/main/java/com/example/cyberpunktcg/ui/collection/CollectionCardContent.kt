@@ -1,8 +1,7 @@
 package com.example.cyberpunktcg.ui.collection
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,21 +9,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -35,7 +31,7 @@ import com.example.cyberpunktcg.data.local.collection.CardEntity
 import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import com.example.cyberpunktcg.ui.components.labelResId
 import com.example.cyberpunktcg.ui.components.CardArtwork
-import com.example.cyberpunktcg.ui.theme.frameColor
+import com.example.cyberpunktcg.ui.components.CardArtworkFrame
 
 @Composable
 internal fun CollectionCardPreview(
@@ -44,41 +40,30 @@ internal fun CollectionCardPreview(
     actionLabel: String? = null,
 ) {
     val card = printing.card
-    OutlinedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(2.dp, card.color.frameColor),
+    Column(
+        modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val alignRows = maxWidth < 240.dp
-            Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().height(132.dp))
-                Text(
-                    card.name,
-                    style = MaterialTheme.typography.titleSmall,
-                    minLines = if (alignRows) 2 else 1,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (card.subtitle.isNotBlank() || alignRows) {
-                    Text(
-                        card.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
-                CollectionCardStats(
-                    card,
-                    MaterialTheme.typography.labelMedium,
-                    if (alignRows) Modifier.heightIn(min = 36.dp * LocalDensity.current.fontScale) else Modifier,
-                )
-                if (actionLabel != null) {
-                    Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-                }
-            }
+        CardArtworkFrame(printing.printing.imagePath, card.color, Modifier.fillMaxWidth())
+        Text(
+            card.name,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (card.subtitle.isNotBlank()) {
+            Text(
+                card.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
+        CollectionCardStats(card, MaterialTheme.typography.labelMedium)
+        if (actionLabel != null) {
+            Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
