@@ -3,6 +3,8 @@ package com.example.cyberpunktcg.ui.collection
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -10,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -48,6 +51,7 @@ internal fun CollectionScreen(
         .flatMap { owned.getValue(it.id) }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val printingLabelHeight = 32.dp * LocalDensity.current.fontScale
     Column(modifier = Modifier.fillMaxSize()) {
         Button(
             onClick = {
@@ -55,7 +59,7 @@ internal fun CollectionScreen(
                 focusManager.clearFocus()
                 onAddCards()
             },
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         ) {
             Text(stringResource(R.string.add_cards))
         }
@@ -72,13 +76,13 @@ internal fun CollectionScreen(
             onSortFieldChange = browser::setSortField,
             onSortDirectionChange = browser::setSortDirection,
         ) { printing ->
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 CollectionCardPreview(printing, onClick = {
                     keyboard?.hide()
                     focusManager.clearFocus()
                     onOpenPrinting(printing.printing.id)
                 })
-                PrintingLabel(printing)
+                PrintingLabel(printing, modifier = Modifier.heightIn(min = printingLabelHeight))
                 OwnedQuantityControls(printing, onChangeQuantity)
             }
         }

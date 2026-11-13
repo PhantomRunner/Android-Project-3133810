@@ -3,11 +3,12 @@ package com.example.cyberpunktcg.ui.browser
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -62,6 +64,7 @@ internal fun <T> CardBrowser(
     val gridState = rememberLazyGridState()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
 
     var previousState by remember { mutableStateOf(state) }
     LaunchedEffect(state) {
@@ -95,31 +98,34 @@ internal fun <T> CardBrowser(
                 focusManager.clearFocus()
             }),
         )
-        Row(
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+            maxItemsInEachRow = 3,
         ) {
             TypeFilterMenu(
                 selectedTypes = state.selectedTypes,
                 availableTypes = availableTypes,
                 onTypesChange = onTypesChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).widthIn(min = 96.dp * fontScale),
             )
             ColorFilterMenu(
                 selectedColors = state.selectedColors,
                 onColorsChange = onColorsChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).widthIn(min = 96.dp * fontScale),
             )
             CardSortMenu(
                 field = state.sortField,
                 direction = state.sortDirection,
                 onFieldChange = onSortFieldChange,
                 onDirectionChange = onSortDirectionChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1.2f).widthIn(min = 112.dp * fontScale),
             )
         }
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Adaptive(150.dp * fontScale),
             modifier = Modifier.weight(1f).fillMaxWidth(),
             state = gridState,
             contentPadding = PaddingValues(vertical = 8.dp),

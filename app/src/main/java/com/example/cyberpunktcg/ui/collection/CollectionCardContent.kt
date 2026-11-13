@@ -2,6 +2,7 @@ package com.example.cyberpunktcg.ui.collection
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,16 +49,35 @@ internal fun CollectionCardPreview(
         modifier = Modifier.fillMaxWidth(),
         border = BorderStroke(2.dp, card.color.frameColor),
     ) {
-        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(card.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (card.subtitle.isNotBlank()) {
-                Text(card.subtitle, style = MaterialTheme.typography.bodySmall)
-            }
-            Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
-            CollectionCardStats(card, MaterialTheme.typography.labelMedium)
-            CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().height(132.dp))
-            if (actionLabel != null) {
-                Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val alignRows = maxWidth < 240.dp
+            Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().height(132.dp))
+                Text(
+                    card.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    minLines = if (alignRows) 2 else 1,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (card.subtitle.isNotBlank() || alignRows) {
+                    Text(
+                        card.subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
+                CollectionCardStats(
+                    card,
+                    MaterialTheme.typography.labelMedium,
+                    if (alignRows) Modifier.heightIn(min = 36.dp * LocalDensity.current.fontScale) else Modifier,
+                )
+                if (actionLabel != null) {
+                    Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }
@@ -86,9 +108,13 @@ internal fun CollectionCardDetailsScreen(printing: CollectionPrinting?) {
 }
 
 @Composable
-private fun CollectionCardStats(card: CardEntity, style: TextStyle) {
+private fun CollectionCardStats(card: CardEntity, style: TextStyle, modifier: Modifier = Modifier) {
     val unknown = stringResource(R.string.collection_unknown_value)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(stringResource(R.string.collection_card_cost, card.cost?.toString() ?: unknown), style = style)
         Text(stringResource(R.string.collection_card_power, card.powerLabel ?: card.power?.toString() ?: unknown), style = style)
         Text(stringResource(R.string.collection_card_ram, card.ram?.toString() ?: unknown), style = style)
@@ -96,10 +122,16 @@ private fun CollectionCardStats(card: CardEntity, style: TextStyle) {
 }
 
 @Composable
-internal fun PrintingLabel(printing: CollectionPrinting, includeVariantAndFinish: Boolean = false) {
+internal fun PrintingLabel(
+    printing: CollectionPrinting,
+    includeVariantAndFinish: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
     Text(
         stringResource(R.string.collection_printing_label, printing.cardSet.name, printing.printing.collectorNumber),
         style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
     )
     if (includeVariantAndFinish) {
         val unknown = stringResource(R.string.collection_unknown_value)
@@ -112,20 +144,22 @@ internal fun PrintingLabel(printing: CollectionPrinting, includeVariantAndFinish
 internal fun OwnedQuantityControls(printing: CollectionPrinting, onChangeQuantity: (String, Int) -> Unit) {
     val removeLabel = stringResource(R.string.remove_card_copy, printing.card.name)
     val addLabel = stringResource(R.string.add_card_copy, printing.card.name)
-    Text(stringResource(R.string.collection_owned_count, printing.quantity))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(
-            onClick = { onChangeQuantity(printing.printing.id, -1) },
-            enabled = printing.quantity > 0,
-            modifier = Modifier.weight(1f).semantics { contentDescription = removeLabel },
-            contentPadding = PaddingValues(8.dp),
-        ) { Text("−") }
-        OutlinedButton(
-            onClick = { onChangeQuantity(printing.printing.id, 1) },
-            enabled = printing.quantity < Int.MAX_VALUE,
-            modifier = Modifier.weight(1f).semantics { contentDescription = addLabel },
-            contentPadding = PaddingValues(8.dp),
-        ) { Text("+") }
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.collection_owned_count, printing.quantity), style = MaterialTheme.typography.labelLarge)
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = { onChangeQuantity(printing.printing.id, -1) },
+                enabled = printing.quantity > 0,
+                modifier = Modifier.weight(1f).semantics { contentDescription = removeLabel },
+                contentPadding = PaddingValues(8.dp),
+            ) { Text("−") }
+            OutlinedButton(
+                onClick = { onChangeQuantity(printing.printing.id, 1) },
+                enabled = printing.quantity < Int.MAX_VALUE,
+                modifier = Modifier.weight(1f).semantics { contentDescription = addLabel },
+                contentPadding = PaddingValues(8.dp),
+            ) { Text("+") }
+        }
     }
 }
 
