@@ -1,12 +1,9 @@
 package com.example.cyberpunktcg.ui.collection
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,18 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
-import com.example.cyberpunktcg.data.local.collection.CardEntity
 import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import com.example.cyberpunktcg.ui.components.labelResId
 import com.example.cyberpunktcg.ui.components.CardArtwork
-import com.example.cyberpunktcg.ui.components.CardArtworkFrame
+import com.example.cyberpunktcg.ui.components.CardBrowserPreview
+import com.example.cyberpunktcg.ui.components.CardBrowserStats
 
 @Composable
 internal fun CollectionCardPreview(
@@ -41,33 +35,14 @@ internal fun CollectionCardPreview(
     actionLabel: String? = null,
 ) {
     val card = printing.card
-    Column(
-        modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        CardArtworkFrame(printing.printing.imagePath, card.color, Modifier.fillMaxWidth())
-        Text(
-            card.name,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (card.subtitle.isNotBlank()) {
-            Text(
-                card.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
-        CollectionCardStats(card, MaterialTheme.typography.labelMedium)
-        if (actionLabel != null) {
-            Spacer(Modifier.weight(1f))
-            Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-        }
-    }
+    CardBrowserPreview(
+        card = card,
+        subtitle = card.subtitle,
+        imagePath = printing.printing.imagePath,
+        powerLabel = card.powerLabel,
+        onClick = onClick,
+        actionLabel = actionLabel,
+    )
 }
 
 @Composable
@@ -87,24 +62,10 @@ internal fun CollectionCardDetailsScreen(printing: CollectionPrinting?) {
         Text(stringResource(card.type.labelResId))
         PrintingLabel(printing, includeVariantAndFinish = true)
         Text(stringResource(R.string.collection_owned_count, printing.quantity))
-        CollectionCardStats(card, MaterialTheme.typography.bodyLarge)
+        CardBrowserStats(card, card.powerLabel, MaterialTheme.typography.bodyLarge)
         if (card.unitTypes.isNotEmpty()) Text(card.unitTypes.joinToString(" • "))
         if (card.eddies == true) Text(stringResource(R.string.card_sell_indicator))
         CardArtwork(printing.printing.imagePath, Modifier.fillMaxWidth().aspectRatio(0.72f))
-    }
-}
-
-@Composable
-private fun CollectionCardStats(card: CardEntity, style: TextStyle, modifier: Modifier = Modifier) {
-    val unknown = stringResource(R.string.collection_unknown_value)
-    FlowRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(stringResource(R.string.collection_card_cost, card.cost?.toString() ?: unknown), style = style)
-        Text(stringResource(R.string.collection_card_power, card.powerLabel ?: card.power?.toString() ?: unknown), style = style)
-        Text(stringResource(R.string.collection_card_ram, card.ram?.toString() ?: unknown), style = style)
     }
 }
 
