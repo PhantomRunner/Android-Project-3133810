@@ -38,9 +38,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.cyberpunktcg.R
+import com.example.cyberpunktcg.sensors.LightSensorState
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean) {
+internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean, light: StateFlow<LightSensorState>) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -112,6 +114,7 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean) {
         )
         else -> CameraPreview(
             viewModel = viewModel,
+            light = light,
             onError = { cameraError = it },
             modifier = Modifier.fillMaxSize(),
         )

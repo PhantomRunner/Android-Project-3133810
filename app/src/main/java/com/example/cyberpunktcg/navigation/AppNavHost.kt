@@ -8,6 +8,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavController
@@ -33,14 +35,17 @@ import com.example.cyberpunktcg.ui.home.HomeScreen
 import com.example.cyberpunktcg.ui.scanner.ScannerScreen
 import com.example.cyberpunktcg.ui.scanner.ScannerViewModel
 import com.example.cyberpunktcg.ui.settings.SettingsScreen
+import com.example.cyberpunktcg.data.model.ThemeMode
+import com.example.cyberpunktcg.sensors.SensorsViewModel
 import java.io.File
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun AppNavHost(
     navController: NavHostController,
-    isDarkTheme: Boolean,
-    onDarkThemeChange: (Boolean) -> Unit,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    sensors: SensorsViewModel,
     decksViewModel: DecksViewModel,
     onEditorBack: () -> Unit,
     onTabSelected: (AppDestination) -> Unit,
@@ -214,12 +219,16 @@ internal fun AppNavHost(
                 navController.addOnDestinationChangedListener(listener)
                 onDispose { navController.removeOnDestinationChangedListener(listener) }
             }
-            ScannerScreen(viewModel = scanner, isActive = currentEntry?.id == entry.id)
+            ScannerScreen(viewModel = scanner, isActive = currentEntry?.id == entry.id, light = sensors.light)
         }
         composable(AppDestination.Settings.route) {
+            val light = if (themeMode == ThemeMode.AUTO) {
+                sensors.light.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED).value
+            } else null
             SettingsScreen(
-                isDarkTheme = isDarkTheme,
-                onDarkThemeChange = onDarkThemeChange,
+                themeMode = themeMode,
+                onThemeModeChange = onThemeModeChange,
+                light = light,
             )
         }
     }

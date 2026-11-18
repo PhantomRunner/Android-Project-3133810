@@ -20,9 +20,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
+import com.example.cyberpunktcg.data.model.ThemeMode
+import com.example.cyberpunktcg.sensors.LightSensorState
 
 @Composable
-internal fun SettingsScreen(isDarkTheme: Boolean, onDarkThemeChange: (Boolean) -> Unit) {
+internal fun SettingsScreen(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    light: LightSensorState?,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,14 +40,29 @@ internal fun SettingsScreen(isDarkTheme: Boolean, onDarkThemeChange: (Boolean) -
         Text(stringResource(R.string.theme_title), style = MaterialTheme.typography.titleLarge)
         ThemeOption(
             label = stringResource(R.string.theme_light),
-            selected = !isDarkTheme,
-            onClick = { onDarkThemeChange(false) },
+            selected = themeMode == ThemeMode.LIGHT,
+            onClick = { onThemeModeChange(ThemeMode.LIGHT) },
         )
         ThemeOption(
             label = stringResource(R.string.theme_dark),
-            selected = isDarkTheme,
-            onClick = { onDarkThemeChange(true) },
+            selected = themeMode == ThemeMode.DARK,
+            onClick = { onThemeModeChange(ThemeMode.DARK) },
         )
+        ThemeOption(
+            label = stringResource(R.string.theme_auto),
+            selected = themeMode == ThemeMode.AUTO,
+            onClick = { onThemeModeChange(ThemeMode.AUTO) },
+        )
+        if (themeMode == ThemeMode.AUTO && light != null) {
+            Text(
+                text = when {
+                    !light.available -> stringResource(R.string.light_sensor_unavailable)
+                    light.lux == null -> stringResource(R.string.light_sensor_waiting)
+                    else -> stringResource(R.string.light_sensor_value, light.lux)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
 

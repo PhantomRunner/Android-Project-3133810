@@ -22,13 +22,19 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.cyberpunktcg.data.local.decks.RoomDeckRepository
 import com.example.cyberpunktcg.ui.decks.DecksViewModel
+import com.example.cyberpunktcg.data.model.ThemeMode
+import com.example.cyberpunktcg.sensors.SensorsViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun CompanionApp(isDarkTheme: Boolean, onDarkThemeChange: (Boolean) -> Unit) {
+internal fun CompanionApp(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    sensors: SensorsViewModel,
+) {
 
     val context = LocalContext.current.applicationContext
     val factory = remember(context) { viewModelFactory { initializer { DecksViewModel(RoomDeckRepository(context)) } } }
@@ -100,8 +106,9 @@ fun CompanionApp(isDarkTheme: Boolean, onDarkThemeChange: (Boolean) -> Unit) {
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
-            isDarkTheme = isDarkTheme,
-            onDarkThemeChange = onDarkThemeChange,
+            themeMode = themeMode,
+            onThemeModeChange = onThemeModeChange,
+            sensors = sensors,
             decksViewModel = decksViewModel,
             onEditorBack = onBack,
             onTabSelected = onTabSelected,

@@ -6,17 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import com.example.cyberpunktcg.data.local.ThemePreferences
+import com.example.cyberpunktcg.data.model.ThemeMode
 
 internal class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = ThemePreferences(application)
 
-    var isDarkTheme by mutableStateOf(preferences.isDarkTheme())
+    var mode by mutableStateOf(preferences.themeMode())
         private set
 
-    fun changeTheme(isDarkTheme: Boolean) {
-        if (this.isDarkTheme == isDarkTheme) return
+    fun changeMode(mode: ThemeMode) {
+        if (this.mode == mode) return
 
-        preferences.saveDarkTheme(isDarkTheme)
-        this.isDarkTheme = isDarkTheme
+        preferences.saveThemeMode(mode)
+        this.mode = mode
     }
 }

@@ -78,6 +78,11 @@
     <string name="theme_title">Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="theme_auto">Auto</string>
+    <string name="light_sensor_value">Ambient light: %1$.0f lx</string>
+    <string name="light_sensor_waiting">Waiting for ambient light. Using the system theme.</string>
+    <string name="light_sensor_unavailable">Ambient light sensor unavailable. Using the system theme.</string>
+    <string name="camera_low_light">Low light. Move to a brighter area for a clearer photo.</string>
     <string name="card_details">Card Details</string>
     <string name="deck_editor">Deck Editor</string>
     <string name="deck_preview">Deck Preview</string>

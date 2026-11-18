@@ -45,7 +45,10 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.cyberpunktcg.R
+import com.example.cyberpunktcg.sensors.LightSensorState
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 internal enum class CameraPreviewError { NO_REAR_CAMERA, UNAVAILABLE }
@@ -53,6 +56,7 @@ internal enum class CameraPreviewError { NO_REAR_CAMERA, UNAVAILABLE }
 @Composable
 internal fun CameraPreview(
     viewModel: ScannerViewModel,
+    light: StateFlow<LightSensorState>,
     onError: (CameraPreviewError) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -61,6 +65,7 @@ internal fun CameraPreview(
     val lifecycleOwner = LocalLifecycleOwner.current
     val reportError by rememberUpdatedState(onError)
     val state = viewModel.uiState
+    val lightState by light.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED)
     val scope = rememberCoroutineScope()
     val previewDescription = stringResource(R.string.camera_preview)
     val previewView = remember(context) {
@@ -145,6 +150,7 @@ internal fun CameraPreview(
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (lightState.isLowLight) Text(stringResource(R.string.camera_low_light))
             if (state.hasCaptureError) Text(stringResource(R.string.camera_capture_failed))
             Button(
                 enabled = isBound && isStreaming && !state.isPreparing && !state.isCapturing,
