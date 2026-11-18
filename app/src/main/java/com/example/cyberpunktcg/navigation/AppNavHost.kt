@@ -89,6 +89,9 @@ internal fun AppNavHost(
         }
         collectionDestinations(navController)
         deckDestination(AppDestination.Decks, decksViewModel) {
+            val openDeck: (String) -> Unit = { deckId ->
+                navController.navigate(deckEditorRoute(deckId)) { launchSingleTop = true }
+            }
             MyDecksScreen(
                 decks = decksViewModel.decks,
                 onDeleteDeck = { id -> scope.launch { decksViewModel.deleteDeck(id) } },
@@ -102,11 +105,10 @@ internal fun AppNavHost(
                         }
                     }
                 },
-                onOpenDeck = { deckId ->
-                    navController.navigate(deckEditorRoute(deckId)) {
-                        launchSingleTop = true
-                    }
-                },
+                onOpenDeck = openDeck,
+                shakeEvents = sensors.shakes,
+                accelerometerAvailable = sensors.accelerometerAvailable,
+                onRandomDeck = { decksViewModel.randomSavedDeckId()?.let(openDeck) },
             )
         }
         deckDestination(
@@ -178,6 +180,10 @@ internal fun AppNavHost(
                 deck = decksViewModel.editingDeck(deckId),
                 legends = decksViewModel.legends,
                 mainCards = decksViewModel.mainCards,
+                previewItems = decksViewModel.previewItems(deckId),
+                shakeEvents = sensors.shakes,
+                accelerometerAvailable = sensors.accelerometerAvailable,
+                onShuffle = { decksViewModel.shufflePreview(deckId) },
                 onOpenCard = { cardId ->
                     deckId?.let { navController.navigate(deckCardDetailsRoute(it, cardId)) { launchSingleTop = true } }
                 },

@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.stateIn
 
 internal class SensorsViewModel(application: Application) : AndroidViewModel(application) {
     private val lightSensor = AmbientLightSensor(application)
+    private val accelerometer = AccelerometerSensor(application)
+
+    val accelerometerAvailable: Boolean get() = accelerometer.isAvailable
+    val shakes = accelerometer.shakes
 
     // Auto theme and camera share one listener. The last subscriber releases it immediately.
     val light = lightSensor.readings.stateIn(

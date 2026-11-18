@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Deck
+import com.example.cyberpunktcg.sensors.ShakeEffect
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun MyDecksScreen(
@@ -41,12 +43,20 @@ internal fun MyDecksScreen(
     onCreateDeck: (String) -> Unit,
     onOpenDeck: (String) -> Unit,
     onDeleteDeck: (String) -> Unit,
+    shakeEvents: Flow<Unit>,
+    accelerometerAvailable: Boolean,
+    onRandomDeck: () -> Unit,
 ) {
     var showCreateDialog by rememberSaveable { mutableStateOf(false) }
     var newDeckName by rememberSaveable { mutableStateOf("") }
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val deckToDelete = decks.firstOrNull { it.id == pendingDeleteId }
+    ShakeEffect(
+        events = shakeEvents,
+        enabled = accelerometerAvailable && decks.isNotEmpty() && !showCreateDialog && deckToDelete == null,
+        onShake = onRandomDeck,
+    )
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -68,6 +78,10 @@ internal fun MyDecksScreen(
         if (decks.isEmpty()) {
             Text(stringResource(R.string.no_decks_yet))
         } else {
+            Text(
+                stringResource(if (accelerometerAvailable) R.string.shake_random_deck else R.string.shake_unavailable),
+                style = MaterialTheme.typography.bodyMedium,
+            )
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),

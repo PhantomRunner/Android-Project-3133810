@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
+import com.example.cyberpunktcg.data.model.DeckItem
+import com.example.cyberpunktcg.sensors.ShakeEffect
+import kotlinx.coroutines.flow.Flow
 import com.example.cyberpunktcg.ui.components.CardPreviewTile
 
 @Composable
@@ -28,6 +31,10 @@ internal fun DeckPreviewScreen(
     deck: Deck?,
     legends: List<Card>,
     mainCards: List<Card>,
+    previewItems: List<DeckItem>,
+    shakeEvents: Flow<Unit>,
+    accelerometerAvailable: Boolean,
+    onShuffle: () -> Unit,
     onOpenCard: (String) -> Unit,
     onBackToDecks: () -> Unit,
 ) {
@@ -36,9 +43,14 @@ internal fun DeckPreviewScreen(
         return
     }
     val selectedLegends = deck.legendIds.mapNotNull { id -> legends.firstOrNull { it.id == id } }
-    val selectedMain = deck.items.mapNotNull { item ->
+    val selectedMain = previewItems.mapNotNull { item ->
         mainCards.firstOrNull { it.id == item.cardId }?.let { card -> card to item.quantity }
     }
+    ShakeEffect(
+        events = shakeEvents,
+        enabled = accelerometerAvailable && selectedMain.size > 1,
+        onShake = onShuffle,
+    )
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier = Modifier.fillMaxSize(),
@@ -55,6 +67,11 @@ internal fun DeckPreviewScreen(
                 )
                 Text(stringResource(R.string.deck_draft), style = MaterialTheme.typography.labelLarge)
                 Text(stringResource(R.string.deck_preview_notice))
+                Text(stringResource(when {
+                    !accelerometerAvailable -> R.string.shake_unavailable
+                    selectedMain.size < 2 -> R.string.shake_preview_needs_cards
+                    else -> R.string.shake_shuffle_preview
+                }))
             }
         }
         item(key = "legends_heading", span = { GridItemSpan(maxLineSpan) }) {

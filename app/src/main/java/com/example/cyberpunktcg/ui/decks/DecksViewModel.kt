@@ -28,6 +28,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
 
     // deck ID as a key to keep suspended editor intact with the deck's edits.
     private var workingCopies: Map<String, Deck> by mutableStateOf(emptyMap())
+    private var previewOrders: Map<String, List<String>> by mutableStateOf(emptyMap())
 
     private var cards: List<Card> by mutableStateOf(emptyList())
     private var ownedQuantities: Map<String, Int> by mutableStateOf(emptyMap())
@@ -63,6 +64,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
                         cards = catalog.cards
                         ownedQuantities = catalog.ownedQuantities
                         workingCopies = workingCopies.filterKeys { id -> saved.any { it.id == id } }
+                        previewOrders = previewOrders.filterKeys { id -> saved.any { it.id == id } }
                         isLoading = false
                     }
             } catch (cancelled: CancellationException) {
@@ -100,6 +102,26 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
 
     fun findDeck(deckId: String?): Deck? {
         return decks.firstOrNull { it.id == deckId }
+    }
+
+    fun randomSavedDeckId(): String? = decks.randomOrNull()?.id
+
+    fun previewItems(deckId: String?): List<DeckItem> {
+        val deck = editingDeck(deckId) ?: return emptyList()
+        val order = previewOrders[deck.id] ?: return deck.items
+        if (order.toSet() != deck.items.map { it.cardId }.toSet()) return deck.items
+        val positions = order.withIndex().associate { it.value to it.index }
+        return deck.items.sortedBy { positions.getValue(it.cardId) }
+    }
+
+    fun shufflePreview(deckId: String?) {
+        val deck = editingDeck(deckId) ?: return
+        val current = previewItems(deckId).map { it.cardId }
+        if (current.size < 2) return
+        val shuffled = current.shuffled()
+        // Guarantee visible feedback when random happens to produce the same order.
+        val order = if (shuffled == current) current.drop(1) + current.first() else shuffled
+        previewOrders = previewOrders + (deck.id to order)
     }
 
     fun editingDeck(deckId: String?): Deck? {
@@ -156,6 +178,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
             deck.items.map { if (it.cardId == cardId) it.copy(quantity = it.quantity + 1) else it }
         }
         workingCopies = workingCopies + (deckId to deck.copy(items = items))
+        previewOrders = previewOrders - deckId
     }
 
     fun removeCard(deckId: String, cardId: String) {
@@ -168,6 +191,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
             }
         }
         workingCopies = workingCopies + (deckId to deck.copy(items = items))
+        previewOrders = previewOrders - deckId
     }
 
     fun validation(deckId: String?): DeckValidation? {
@@ -194,12 +218,14 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
             repository.deleteDeck(deckId)
             decks = decks.filterNot { it.id == deckId }
             workingCopies = workingCopies - deckId
+            previewOrders = previewOrders - deckId
             true
         }
     }
 
     fun discardChanges(deckId: String) {
         workingCopies = workingCopies - deckId
+        previewOrders = previewOrders - deckId
     }
 
     private suspend fun write(operation: suspend () -> Boolean): Boolean = writes.withLock {
