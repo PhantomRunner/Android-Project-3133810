@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -24,7 +28,42 @@ import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 internal fun CollectionScreen(
     state: CollectionUiState,
     browser: CardBrowserViewModel,
-    onAddCards: () -> Unit,
+    ownedOnly: Boolean,
+    onOwnedOnlyChange: (Boolean) -> Unit,
+    onOpenPrinting: (String) -> Unit,
+    onChangeQuantity: (String, Int) -> Unit,
+    onRetry: () -> Unit,
+) {
+    val grids = rememberSaveableStateHolder()
+    Column(modifier = Modifier.fillMaxSize()) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            SegmentedButton(
+                selected = !ownedOnly,
+                onClick = { onOwnedOnlyChange(false) },
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+            ) { Text(stringResource(R.string.collection_all_cards)) }
+            SegmentedButton(
+                selected = ownedOnly,
+                onClick = { onOwnedOnlyChange(true) },
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+            ) { Text(stringResource(R.string.collection_owned)) }
+        }
+        grids.SaveableStateProvider(ownedOnly) {
+            if (ownedOnly) {
+                OwnedCards(state, browser, onOpenPrinting, onChangeQuantity, onRetry)
+            } else {
+                CatalogBrowser(state, browser, onRetry) { printing ->
+                    OwnedQuantityControls(printing, onChangeQuantity)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OwnedCards(
+    state: CollectionUiState,
+    browser: CardBrowserViewModel,
     onOpenPrinting: (String) -> Unit,
     onChangeQuantity: (String, Int) -> Unit,
     onRetry: () -> Unit,
@@ -41,7 +80,7 @@ internal fun CollectionScreen(
     val owned = remember(printings) { printings.filter { it.quantity > 0 }.groupBy { it.card.id } }
     if (owned.isEmpty()) {
         CollectionMessage(stringResource(R.string.stash_empty)) {
-            Button(onClick = onAddCards) { Text(stringResource(R.string.add_cards)) }
+            if (state.saveFailed) QuantitySaveError()
         }
         return
     }
@@ -51,16 +90,6 @@ internal fun CollectionScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     Column(modifier = Modifier.fillMaxSize()) {
-        Button(
-            onClick = {
-                keyboard?.hide()
-                focusManager.clearFocus()
-                onAddCards()
-            },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        ) {
-            Text(stringResource(R.string.add_cards))
-        }
         if (state.saveFailed) {
             QuantitySaveError(Modifier.padding(horizontal = 16.dp))
         }

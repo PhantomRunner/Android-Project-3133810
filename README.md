@@ -20,18 +20,23 @@ The current development build includes the following screens:
   created decks: name, Draft status, Main and Legends counts, and previews of
   selected Legends. Tapping a deck opens its editor; View all decks opens the full
   list. Unsaved edits are not shown here.
-- Total cards, Unique cards and Complete sets currently display dashes:
-  collection statistics are not calculated yet.
+- Total cards, Unique cards and Owned editions update as quantities change.
 
 ### Collection
 
-- Starts empty. Add cards opens the local catalog with its own search, filters and sort order.
+- All cards opens the offline catalog on first visit. Owned shows the user's stash,
+  which starts with zero copies.
 - Choose edition opens the available printings. The +/− buttons save counts to Room
-  immediately. Removing the last copy hides the printing from Collection.
+  immediately. Removing the last copy hides the printing from Owned.
 - The two-column grid shows owned editions and quantities. Tapping a card opens its
   details. Search, filters and scroll position are restored when returning to the grid.
 - The catalog and owned grid display local artwork and gameplay stats. Missing
   values appear as a dash and sort after known values in either direction.
+
+Build an APK with an approved catalog using `./gradlew assembleDebug -PcatalogAssetsDir=/path/to/assets`.
+The assets directory must contain `collection/catalog.json` and any artwork referenced
+by that file under `collection/card-images/`. Debug builds also support the local catalog
+in `local-assets/debug` when the property is omitted.
 
 ### My decks
 
@@ -93,7 +98,7 @@ The app follows a simple MVVM structure. Compose screens display state from
 ViewModels and pass user actions back to them. When the state changes, Compose
 updates the parts of the screen that use it.
 
-- Collection, the local Add cards screen and the deck browser share
+- Collection and the deck browser share
   `CardBrowserViewModel` logic. Each keeps its own search, filters and sort order.
 - `DecksViewModel` is shared by Home and the deck screens. The editor and Preview
   show the working copy while you edit. Save draft updates the version shown on

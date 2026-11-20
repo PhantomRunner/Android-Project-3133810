@@ -14,6 +14,8 @@
     <string name="home_view_all_decks">View all decks</string>
     <string name="home_go_to_my_decks">Go to My Decks</string>
     <string name="collection">Collection</string>
+    <string name="collection_all_cards">All cards</string>
+    <string name="collection_owned">Owned</string>
     <string name="stash_empty">Your stash is empty</string>
     <string name="collection_loading">Loading collection…</string>
     <string name="collection_read_failed">Could not open your stash.</string>

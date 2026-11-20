@@ -32,11 +32,11 @@ import com.example.cyberpunktcg.ui.browser.CardBrowser
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 
 @Composable
-internal fun AddCollectionCardsScreen(
+internal fun CatalogBrowser(
     state: CollectionUiState,
     browser: CardBrowserViewModel,
-    onChangeQuantity: (String, Int) -> Unit,
     onRetry: () -> Unit,
+    editionContent: @Composable (CollectionPrinting) -> Unit,
 ) {
     if (state.readFailed) {
         CollectionReadError(onRetry)
@@ -97,8 +97,8 @@ internal fun AddCollectionCardsScreen(
         EditionPicker(
             editions = editions,
             saveFailed = state.saveFailed,
-            onChangeQuantity = onChangeQuantity,
             onDismiss = { selectedCardId = null },
+            editionContent = editionContent,
         )
     }
 }
@@ -108,8 +108,8 @@ internal fun AddCollectionCardsScreen(
 private fun EditionPicker(
     editions: List<CollectionPrinting>,
     saveFailed: Boolean,
-    onChangeQuantity: (String, Int) -> Unit,
     onDismiss: () -> Unit,
+    editionContent: @Composable (CollectionPrinting) -> Unit,
 ) {
     val card = editions.first().card
     ModalBottomSheet(
@@ -131,7 +131,7 @@ private fun EditionPicker(
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         PrintingLabel(printing, includeVariantAndFinish = true)
-                        OwnedQuantityControls(printing, onChangeQuantity)
+                        editionContent(printing)
                     }
                 }
             }

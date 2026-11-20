@@ -1,6 +1,7 @@
 package com.example.cyberpunktcg.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,7 +13,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
-import com.example.cyberpunktcg.ui.collection.AddCollectionCardsScreen
 import com.example.cyberpunktcg.ui.collection.CollectionCardDetailsScreen
 import com.example.cyberpunktcg.ui.collection.CollectionLoading
 import com.example.cyberpunktcg.ui.collection.CollectionReadError
@@ -20,24 +20,28 @@ import com.example.cyberpunktcg.ui.collection.CollectionScreen
 import com.example.cyberpunktcg.ui.collection.CollectionViewModel
 
 internal fun NavGraphBuilder.collectionDestinations(navController: NavController) {
-    composable(AppDestination.Collection.route) {
+    composable(AppDestination.Collection.route) { entry ->
         val collection: CollectionViewModel = viewModel()
         val browser: CardBrowserViewModel = viewModel()
         val state by collection.state.collectAsStateWithLifecycle()
+        val ownedOnly by entry.savedStateHandle.getStateFlow(OWNED_ONLY, false).collectAsStateWithLifecycle()
         CollectionScreen(
             state = state,
             browser = browser,
-            onAddCards = { navController.navigate(AppDestination.AddCollectionCards.route) { launchSingleTop = true } },
+            ownedOnly = ownedOnly,
+            onOwnedOnlyChange = { entry.savedStateHandle[OWNED_ONLY] = it },
             onOpenPrinting = { id -> navController.navigate(cardDetailsRoute(id)) { launchSingleTop = true } },
             onChangeQuantity = collection::changeQuantity,
             onRetry = collection::retry,
         )
     }
     composable(AppDestination.AddCollectionCards.route) { entry ->
-        val collection = sharedCollectionViewModel(navController, entry)
-        val browser: CardBrowserViewModel = viewModel()
-        val state by collection.state.collectAsStateWithLifecycle()
-        AddCollectionCardsScreen(state, browser, collection::changeQuantity, collection::retry)
+        // Tasks saved before All cards moved into Collection can still restore this route.
+        LaunchedEffect(entry) {
+            val collection = navController.getBackStackEntry(AppDestination.Collection.route)
+            collection.savedStateHandle[OWNED_ONLY] = false
+            navController.popBackStack(AppDestination.Collection.route, inclusive = false)
+        }
     }
     composable(
         route = AppDestination.CardDetails.route,
@@ -54,6 +58,8 @@ internal fun NavGraphBuilder.collectionDestinations(navController: NavController
         }
     }
 }
+
+private const val OWNED_ONLY = "collection_owned_only"
 
 @Composable
 private fun sharedCollectionViewModel(navController: NavController, entry: NavBackStackEntry): CollectionViewModel {

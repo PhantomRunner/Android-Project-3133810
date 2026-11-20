@@ -6,6 +6,8 @@ plugins {
     id("androidx.room")
 }
 
+val catalogAssetsDir = providers.gradleProperty("catalogAssetsDir").map { rootProject.file(it) }
+
 android {
     namespace = "com.example.cyberpunktcg"
     compileSdk = 36
@@ -28,8 +30,19 @@ android {
         compose = true
     }
 
-    sourceSets.named("debug") {
-        assets.srcDir(rootProject.file("local-assets/debug"))
+    val catalogAssets = catalogAssetsDir.orNull
+    if (catalogAssets == null) {
+        sourceSets.named("debug") {
+            assets.srcDir(rootProject.file("local-assets/debug"))
+        }
+    } else {
+        val catalog = catalogAssets.resolve("collection/catalog.json")
+        require(catalog.isFile && catalog.length() > 0) {
+            "-PcatalogAssetsDir must contain a nonempty collection/catalog.json (checked $catalog)"
+        }
+        sourceSets.named("main") {
+            assets.srcDir(catalogAssets)
+        }
     }
 }
 
