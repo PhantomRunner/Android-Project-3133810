@@ -58,7 +58,7 @@ internal abstract class CollectionDao {
     }
 
     @Transaction
-    open suspend fun changeQuantity(printingId: String, delta: Int) {
+    open suspend fun changeQuantity(printingId: String, delta: Int): Boolean {
         require(delta == -1 || delta == 1)
         val current = findQuantity(printingId) ?: 0
         val quantity = (current.toLong() + delta).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
@@ -67,6 +67,7 @@ internal abstract class CollectionDao {
         } else {
             upsertOwned(OwnedPrintingEntity(printingId, quantity))
         }
+        return quantity != current
     }
 
     @Upsert

@@ -74,7 +74,6 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(stringResource(R.string.camera_recognition_later))
             Button(onClick = onRetake, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.camera_retake))
             }

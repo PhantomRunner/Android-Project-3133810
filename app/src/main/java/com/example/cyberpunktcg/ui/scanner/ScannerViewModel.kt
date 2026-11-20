@@ -5,12 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal data class ScannerUiState(
@@ -22,8 +24,26 @@ internal data class ScannerUiState(
 
 internal data class PhotoCaptureRequest(val id: Long, val file: File)
 
-internal class ScannerViewModel(private val photoDirectory: File) : ViewModel() {
+internal sealed interface ManualAddState {
+    data object Inactive : ManualAddState
+    data object Browsing : ManualAddState
+    data class Confirming(
+        val printing: CollectionPrinting,
+        val isSaving: Boolean = false,
+        val error: ManualAddError? = null,
+    ) : ManualAddState
+    data class Added(val printing: CollectionPrinting) : ManualAddState
+}
+
+internal enum class ManualAddError { SAVE_FAILED, QUANTITY_LIMIT }
+
+internal class ScannerViewModel(
+    private val photoDirectory: File,
+    private val addOwnedCopy: suspend (String) -> Boolean,
+) : ViewModel() {
     var uiState by mutableStateOf(ScannerUiState())
+        private set
+    var manualAddState by mutableStateOf<ManualAddState>(ManualAddState.Inactive)
         private set
 
     private var requestId = 0L
@@ -106,6 +126,51 @@ internal class ScannerViewModel(private val photoDirectory: File) : ViewModel() 
         deletePhoto(uiState.photoFile)
         pendingCapture = null
         uiState = uiState.copy(photoFile = null, isCapturing = false, hasCaptureError = false)
+    }
+
+    fun findCardManually() {
+        if (manualAddState != ManualAddState.Inactive) return
+        cancelPendingCapture()
+        manualAddState = ManualAddState.Browsing
+    }
+
+    fun selectPrinting(printing: CollectionPrinting) {
+        if (manualAddState == ManualAddState.Browsing) {
+            manualAddState = ManualAddState.Confirming(printing)
+        }
+    }
+
+    fun backFromManualAdd() {
+        when (val state = manualAddState) {
+            ManualAddState.Browsing -> manualAddState = ManualAddState.Inactive
+            is ManualAddState.Confirming -> if (!state.isSaving) manualAddState = ManualAddState.Browsing
+            else -> Unit
+        }
+    }
+
+    fun confirmPrinting() {
+        val confirmation = manualAddState as? ManualAddState.Confirming ?: return
+        if (confirmation.isSaving) return
+        manualAddState = confirmation.copy(isSaving = true, error = null)
+        viewModelScope.launch {
+            val error = try {
+                if (addOwnedCopy(confirmation.printing.printing.id)) null else ManualAddError.QUANTITY_LIMIT
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                ManualAddError.SAVE_FAILED
+            }
+            if (error == null) {
+                reset()
+                manualAddState = ManualAddState.Added(confirmation.printing)
+            } else {
+                manualAddState = confirmation.copy(error = error)
+            }
+        }
+    }
+
+    fun scanAnother() {
+        if (manualAddState is ManualAddState.Added) manualAddState = ManualAddState.Inactive
     }
 
     override fun onCleared() {

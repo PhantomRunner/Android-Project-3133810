@@ -96,7 +96,7 @@ class ScannerViewModelTest {
     fun aNewSessionCleansOrphanedPhotographs() = runBlocking {
         val directory = temporaryFolder.newFolder()
         val orphan = File(directory, "old.jpg").apply { writeText("old photograph") }
-        val viewModel = ScannerViewModel(directory)
+        val viewModel = scanner(directory)
         viewModel.prepare()
         assertFalse(orphan.exists())
         assertFalse(viewModel.uiState.isPreparing)
@@ -106,7 +106,7 @@ class ScannerViewModelTest {
     @Test
     fun anUnwritablePhotoLocationReportsFailureAndCanBeRetried() = runBlocking {
         val directory = temporaryFolder.newFolder()
-        val viewModel = ScannerViewModel(directory)
+        val viewModel = scanner(directory)
         viewModel.prepare()
         assertTrue(directory.delete())
         directory.writeText("a file cannot contain photographs")
@@ -134,7 +134,11 @@ class ScannerViewModelTest {
     }
 
     private suspend fun preparedViewModel(): ScannerViewModel {
-        return ScannerViewModel(temporaryFolder.newFolder()).also { it.prepare() }
+        return scanner(temporaryFolder.newFolder()).also { it.prepare() }
+    }
+
+    private fun scanner(directory: File) = ScannerViewModel(directory) {
+        throw AssertionError("Photo capture must not change the collection")
     }
 
     private suspend fun awaitDeletion(file: File) {

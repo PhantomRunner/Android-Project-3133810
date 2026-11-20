@@ -36,7 +36,7 @@ internal fun CatalogBrowser(
     state: CollectionUiState,
     browser: CardBrowserViewModel,
     onRetry: () -> Unit,
-    editionContent: @Composable (CollectionPrinting) -> Unit,
+    editionContent: @Composable (printing: CollectionPrinting, dismiss: () -> Unit) -> Unit,
 ) {
     if (state.readFailed) {
         CollectionReadError(onRetry)
@@ -109,7 +109,7 @@ private fun EditionPicker(
     editions: List<CollectionPrinting>,
     saveFailed: Boolean,
     onDismiss: () -> Unit,
-    editionContent: @Composable (CollectionPrinting) -> Unit,
+    editionContent: @Composable (printing: CollectionPrinting, dismiss: () -> Unit) -> Unit,
 ) {
     val card = editions.first().card
     ModalBottomSheet(
@@ -131,7 +131,7 @@ private fun EditionPicker(
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         PrintingLabel(printing, includeVariantAndFinish = true)
-                        editionContent(printing)
+                        editionContent(printing, onDismiss)
                     }
                 }
             }

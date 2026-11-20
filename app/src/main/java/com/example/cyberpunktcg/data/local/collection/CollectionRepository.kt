@@ -35,7 +35,6 @@ internal class CollectionRepository(
         return catalog.printings.map { it.id }.toSet()
     }
 
-    suspend fun changeQuantity(printingId: String, delta: Int) {
+    suspend fun changeQuantity(printingId: String, delta: Int): Boolean =
         dao.changeQuantity(printingId, delta)
-    }
 }

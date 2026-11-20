@@ -52,7 +52,7 @@ internal fun CollectionScreen(
             if (ownedOnly) {
                 OwnedCards(state, browser, onOpenPrinting, onChangeQuantity, onRetry)
             } else {
-                CatalogBrowser(state, browser, onRetry) { printing ->
+                CatalogBrowser(state, browser, onRetry) { printing, _ ->
                     OwnedQuantityControls(printing, onChangeQuantity)
                 }
             }

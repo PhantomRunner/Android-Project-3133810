@@ -76,8 +76,16 @@
     <string name="camera_capture_failed">Could not take a photo. Please try again.</string>
     <string name="camera_captured_photo">Captured photo</string>
     <string name="camera_photo_unavailable">Photo is unavailable. Please retake it.</string>
-    <string name="camera_recognition_later">Recognition coming later</string>
     <string name="camera_retake">Retake</string>
+    <string name="scanner_find_manually">Find card manually</string>
+    <string name="scanner_select_printing">Select this edition</string>
+    <string name="scanner_confirm_printing">Confirm edition</string>
+    <string name="scanner_add_copy">Add one copy</string>
+    <string name="scanner_adding_copy">Adding copy…</string>
+    <string name="scanner_quantity_limit">This edition has reached the owned quantity limit.</string>
+    <string name="scanner_added_card">Added one copy of %1$s to your collection.</string>
+    <string name="scanner_scan_another">Scan another</string>
+    <string name="scanner_done">Done</string>
     <string name="settings">Settings</string>
     <string name="theme_title">Theme</string>
     <string name="theme_light">Light</string>

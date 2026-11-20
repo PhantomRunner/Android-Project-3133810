@@ -75,8 +75,10 @@ in `local-assets/debug` when the property is omitted.
   returns to the previous screen and discards the photo. CameraX releases the camera
   during photo review and when leaving Scanner, and stops it in the background.
   The next scanner session clears files left after process termination.
-- The scanner warns in low light while leaving capture available. The next step
-  is manual catalog confirmation, followed by text recognition and card matching.
+- The scanner warns in low light while leaving capture available. Find card manually
+  opens the offline catalog from capture or photo review, including after permission
+  denial or a camera error. Choose an edition and confirm to add one copy. Text
+  recognition and card matching are the next steps.
 
 ### Settings
 
@@ -107,7 +109,8 @@ updates the parts of the screen that use it.
   card IDs and copy counts. Kotlin functions in `domain` calculate RAM limits
   and deck warnings.
 - CameraX handles the preview and takes one photo at a time in `ScannerActivity`.
-  The Activity's `ScannerViewModel` tracks the capture and photo review.
+  The Activity's `ScannerViewModel` tracks capture, photo review, and manual
+  confirmation. Confirming an edition updates the same Room collection as the main app.
 
 #### State and storage
 
