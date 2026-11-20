@@ -1,6 +1,5 @@
 package com.example.cyberpunktcg.ui.decks
 
-import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -8,32 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
@@ -41,11 +29,8 @@ import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 import com.example.cyberpunktcg.domain.DeckValidation
 import com.example.cyberpunktcg.ui.components.labelResId
-import com.example.cyberpunktcg.ui.components.cardStat
-import com.example.cyberpunktcg.ui.theme.LegacyNavigationBarScrim
 import com.example.cyberpunktcg.ui.theme.frameColor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeckEditorScreen(
     deck: Deck?,
@@ -58,6 +43,7 @@ internal fun DeckEditorScreen(
     isSaving: Boolean,
     onAddCards: () -> Unit,
     onPreview: () -> Unit,
+    onOpenCard: (String) -> Unit,
     hasUnsavedChanges: Boolean,
     onNameChange: (String) -> Unit,
     canAddLegend: (String) -> Boolean,
@@ -110,34 +96,13 @@ internal fun DeckEditorScreen(
                 DeckValidationSummary(validation)
             }
             Text(stringResource(R.string.deck_legend_count, deck.legendIds.size))
-            repeat(3) { index ->
-                val legendId = deck.legendIds.getOrNull(index)
-                val legend = legends.firstOrNull { it.id == legendId }
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = legend?.let { BorderStroke(2.dp, it.color.frameColor) } ?: CardDefaults.outlinedCardBorder(),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(stringResource(R.string.legend_slot, index + 1), style = MaterialTheme.typography.titleSmall)
-                        if (legend != null) {
-                            Text(legend.name, style = MaterialTheme.typography.titleMedium)
-                            Text(legend.subtitle)
-                            Text(stringResource(legend.color.labelResId))
-                            Text(stringResource(R.string.card_ram, legend.ram.cardStat()))
-                            TextButton(onClick = { onRemoveLegend(legend.id) }) {
-                                Text(stringResource(R.string.remove_legend))
-                            }
-                        } else {
-                            OutlinedButton(onClick = { showLegendPicker = true }) {
-                                Text(stringResource(R.string.choose_legend))
-                            }
-                        }
-                    }
-                }
-            }
+            DeckEditorLegendSlots(
+                legendIds = deck.legendIds,
+                legends = legends,
+                onChooseLegend = { showLegendPicker = true },
+                onRemoveLegend = onRemoveLegend,
+                onOpenCard = onOpenCard,
+            )
             Text(stringResource(R.string.deck_main_count, deck.mainCardCount))
             Button(onClick = onAddCards, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.add_cards))
@@ -167,53 +132,15 @@ internal fun DeckEditorScreen(
         }
     }
     if (showLegendPicker && deck != null) {
-        ModalBottomSheet(
-            onDismissRequest = { showLegendPicker = false },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        ) {
-
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                val view = LocalView.current
-                SideEffect {
-                    @Suppress("DEPRECATION")
-                    (view.parent as? DialogWindowProvider)?.window?.navigationBarColor = LegacyNavigationBarScrim.toArgb()
-                }
-            }
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item {
-                    Text(stringResource(R.string.choose_legend), style = MaterialTheme.typography.titleLarge)
-                    Text(stringResource(R.string.legend_selection_hint))
-                }
-                if (ownedLegends.isEmpty()) {
-                    item { Text(stringResource(R.string.deck_no_owned_legends)) }
-                }
-                items(ownedLegends, key = { it.id }) { legend ->
-                    OutlinedCard(modifier = Modifier.fillMaxWidth(), border = BorderStroke(2.dp, legend.color.frameColor)) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(legend.name, style = MaterialTheme.typography.titleMedium)
-                            Text(legend.subtitle)
-                            Text(stringResource(legend.color.labelResId))
-                            Text(stringResource(R.string.card_ram, legend.ram.cardStat()))
-                            Text(stringResource(R.string.collection_owned_count, ownedQuantity(legend.id)))
-                            Button(
-                                enabled = canAddLegend(legend.id),
-                                onClick = {
-                                    onAddLegend(legend.id)
-                                    showLegendPicker = false
-                                },
-                            ) { Text(stringResource(R.string.select_legend)) }
-                        }
-                    }
-                }
-                item {
-                    TextButton(onClick = { showLegendPicker = false }, modifier = Modifier.padding(bottom = 16.dp)) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                }
-            }
-        }
+        DeckEditorLegendPicker(
+            ownedLegends = ownedLegends,
+            ownedQuantity = ownedQuantity,
+            canAddLegend = canAddLegend,
+            onSelectLegend = { id ->
+                onAddLegend(id)
+                showLegendPicker = false
+            },
+            onDismiss = { showLegendPicker = false },
+        )
     }
 }

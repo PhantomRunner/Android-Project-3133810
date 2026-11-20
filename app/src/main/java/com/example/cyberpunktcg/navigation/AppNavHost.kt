@@ -140,6 +140,9 @@ internal fun AppNavHost(
                 isSaving = decksViewModel.isSaving,
                 onAddCards = { deckId?.let { navController.navigate(deckCardsRoute(it)) { launchSingleTop = true } } },
                 onPreview = { deckId?.let { navController.navigate(deckPreviewRoute(it)) { launchSingleTop = true } } },
+                onOpenCard = { cardId ->
+                    deckId?.let { navController.navigate(deckCardDetailsRoute(it, cardId)) { launchSingleTop = true } }
+                },
                 hasUnsavedChanges = decksViewModel.hasUnsavedChanges(deckId),
                 onNameChange = { name -> deckId?.let { decksViewModel.renameDeck(it, name) } },
                 canAddLegend = { cardId -> deckId != null && decksViewModel.canAddLegend(deckId, cardId) },
