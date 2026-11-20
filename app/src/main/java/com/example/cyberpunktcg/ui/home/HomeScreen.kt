@@ -36,6 +36,8 @@ internal fun HomeScreen(
     deckCount: Int,
     recentDecks: List<Deck>,
     legendsByDeck: Map<String, List<Card>>,
+    statistics: HomeStatisticsState,
+    onRetryStatistics: () -> Unit,
     onBrowseCollection: () -> Unit,
     onOpenDecks: () -> Unit,
     onViewAllDecks: () -> Unit,
@@ -48,7 +50,7 @@ internal fun HomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        HomeStatistics()
+        HomeStatistics(statistics, onRetryStatistics)
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -99,38 +101,57 @@ internal fun HomeScreen(
 }
 
 @Composable
-private fun HomeStatistics() {
+private fun HomeStatistics(state: HomeStatisticsState, onRetry: () -> Unit) {
     val minimumStatisticWidth = 100.dp * LocalDensity.current.fontScale
-    val labels = listOf(R.string.home_total_cards, R.string.home_unique_cards, R.string.home_complete_sets)
+    val statistics = (state as? HomeStatisticsState.Ready)?.statistics
+    val metrics = listOf(
+        R.string.home_total_cards to statistics?.totalCards?.toString(),
+        R.string.home_unique_cards to statistics?.uniqueCards?.toString(),
+        R.string.home_owned_editions to statistics?.ownedEditions?.toString(),
+    )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            if (maxWidth >= minimumStatisticWidth * labels.size + 24.dp) {
+            if (maxWidth >= minimumStatisticWidth * metrics.size + 24.dp) {
                 Row(
                     modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    labels.forEach { label ->
-                        HomeStatistic(label, Modifier.weight(1f).fillMaxHeight())
+                    metrics.forEach { (label, value) ->
+                        HomeStatistic(label, value, Modifier.weight(1f).fillMaxHeight())
                     }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    labels.forEach { label ->
-                        HomeStatistic(label, Modifier.fillMaxWidth())
+                    metrics.forEach { (label, value) ->
+                        HomeStatistic(label, value, Modifier.fillMaxWidth())
                     }
                 }
             }
         }
-        Text(
-            text = stringResource(R.string.home_statistics_notice),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        when (state) {
+            HomeStatisticsState.Loading -> Text(
+                stringResource(R.string.home_statistics_loading),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            HomeStatisticsState.Error -> {
+                Text(
+                    stringResource(R.string.home_statistics_error),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                TextButton(onClick = onRetry) { Text(stringResource(R.string.collection_retry)) }
+            }
+            is HomeStatisticsState.Ready -> Text(
+                stringResource(R.string.home_statistics_notice),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
 @Composable
-private fun HomeStatistic(@StringRes labelResId: Int, modifier: Modifier = Modifier) {
+private fun HomeStatistic(@StringRes labelResId: Int, value: String?, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
@@ -141,8 +162,10 @@ private fun HomeStatistic(@StringRes labelResId: Int, modifier: Modifier = Modif
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Owned quantities and set completion are not available in the demo catalog.
-            Text(stringResource(R.string.home_statistic_placeholder), style = MaterialTheme.typography.headlineMedium)
+            Text(
+                value ?: stringResource(R.string.home_statistic_placeholder),
+                style = MaterialTheme.typography.headlineMedium,
+            )
             Text(
                 text = stringResource(labelResId),
                 style = MaterialTheme.typography.labelMedium,

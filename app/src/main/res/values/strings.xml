@@ -4,9 +4,11 @@
     <string name="home">Home</string>
     <string name="home_total_cards">Total cards</string>
     <string name="home_unique_cards">Unique cards</string>
-    <string name="home_complete_sets">Complete sets</string>
+    <string name="home_owned_editions">Owned editions</string>
     <string name="home_statistic_placeholder">—</string>
-    <string name="home_statistics_notice">Collection statistics coming later</string>
+    <string name="home_statistics_notice">Your owned copies, unique cards and editions.</string>
+    <string name="home_statistics_loading">Loading collection statistics…</string>
+    <string name="home_statistics_error">Could not load collection statistics.</string>
     <string name="home_browse_collection">Browse collection</string>
     <string name="home_your_decks">Your decks: %1$d</string>
     <string name="home_view_all_decks">View all decks</string>

@@ -32,10 +32,12 @@ import com.example.cyberpunktcg.ui.decks.DecksViewModel
 import com.example.cyberpunktcg.ui.decks.DeckDataState
 import com.example.cyberpunktcg.ui.decks.MyDecksScreen
 import com.example.cyberpunktcg.ui.home.HomeScreen
+import com.example.cyberpunktcg.ui.home.HomeViewModel
 import com.example.cyberpunktcg.ui.scanner.ScannerScreen
 import com.example.cyberpunktcg.ui.scanner.ScannerViewModel
 import com.example.cyberpunktcg.ui.settings.SettingsScreen
 import com.example.cyberpunktcg.data.model.ThemeMode
+import com.example.cyberpunktcg.data.local.collection.CollectionRepository
 import com.example.cyberpunktcg.sensors.SensorsViewModel
 import java.io.File
 import kotlinx.coroutines.launch
@@ -63,6 +65,12 @@ internal fun AppNavHost(
         modifier = modifier,
     ) {
         deckDestination(AppDestination.Home, decksViewModel) {
+            val context = LocalContext.current.applicationContext
+            val factory = remember(context) {
+                viewModelFactory { initializer { HomeViewModel(CollectionRepository(context).statistics) } }
+            }
+            val home: HomeViewModel = viewModel(factory = factory)
+            val statistics by home.state.collectAsStateWithLifecycle()
             val decks = decksViewModel.decks
             val recentDecks = decks.takeLast(3).asReversed()
             val legendsByDeck = recentDecks.associate { deck ->
@@ -78,6 +86,8 @@ internal fun AppNavHost(
                 deckCount = decks.size,
                 recentDecks = recentDecks,
                 legendsByDeck = legendsByDeck,
+                statistics = statistics,
+                onRetryStatistics = home::retry,
                 onBrowseCollection = { onTabSelected(AppDestination.Collection) },
                 onOpenDecks = { onTabSelected(AppDestination.Decks) },
                 onViewAllDecks = onViewAllDecks,
