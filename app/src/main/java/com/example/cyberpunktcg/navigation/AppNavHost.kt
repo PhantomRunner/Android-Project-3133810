@@ -1,7 +1,7 @@
 package com.example.cyberpunktcg.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -12,7 +12,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -21,7 +20,6 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.cyberpunktcg.ui.card.CardDetailsScreen
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 import com.example.cyberpunktcg.ui.decks.DeckCardsScreen
@@ -34,13 +32,10 @@ import com.example.cyberpunktcg.ui.decks.MyDecksScreen
 import com.example.cyberpunktcg.ui.decks.shareDeck
 import com.example.cyberpunktcg.ui.home.HomeScreen
 import com.example.cyberpunktcg.ui.home.HomeViewModel
-import com.example.cyberpunktcg.ui.scanner.ScannerScreen
-import com.example.cyberpunktcg.ui.scanner.ScannerViewModel
 import com.example.cyberpunktcg.ui.settings.SettingsScreen
 import com.example.cyberpunktcg.data.model.ThemeMode
 import com.example.cyberpunktcg.data.local.collection.CollectionRepository
 import com.example.cyberpunktcg.sensors.SensorsViewModel
-import java.io.File
 import kotlinx.coroutines.launch
 
 @Composable
@@ -229,22 +224,8 @@ internal fun AppNavHost(
             }
         }
         composable(AppDestination.Scanner.route) { entry ->
-            val context = LocalContext.current
-            val factory = remember(context.applicationContext) {
-                val photoDirectory = File(context.cacheDir, "scanner_photos")
-                viewModelFactory { initializer { ScannerViewModel(photoDirectory) } }
-            }
-            val scanner: ScannerViewModel = viewModel(factory = factory)
-            val currentEntry by navController.currentBackStackEntryAsState()
-            DisposableEffect(navController, scanner) {
-                val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
-
-                    if (destination.route != AppDestination.Scanner.route) scanner.reset()
-                }
-                navController.addOnDestinationChangedListener(listener)
-                onDispose { navController.removeOnDestinationChangedListener(listener) }
-            }
-            ScannerScreen(viewModel = scanner, isActive = currentEntry?.id == entry.id, light = sensors.light)
+            // Older saved tasks can restore the in-app Scanner route.
+            LaunchedEffect(entry) { navController.popBackStack() }
         }
         composable(AppDestination.Settings.route) {
             val light = if (themeMode == ThemeMode.AUTO) {

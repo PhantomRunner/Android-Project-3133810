@@ -34,6 +34,7 @@ internal fun CompanionApp(
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
     sensors: SensorsViewModel,
+    onOpenScanner: () -> Unit,
 ) {
 
     val context = LocalContext.current.applicationContext
@@ -60,8 +61,9 @@ internal fun CompanionApp(
     }
 
     val onTabSelected: (AppDestination) -> Unit = { selectedTab ->
-        if (selectedTab != currentDestination.mainTab) {
-            navigateToMainTab(navController, selectedTab)
+        when {
+            selectedTab == AppDestination.Scanner -> onOpenScanner()
+            selectedTab != currentDestination.mainTab -> navigateToMainTab(navController, selectedTab)
         }
     }
 

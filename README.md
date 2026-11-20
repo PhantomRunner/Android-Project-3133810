@@ -63,37 +63,37 @@ in `local-assets/debug` when the property is omitted.
 
 ### Scanner
 
-- Uses CameraX: opening the tab requests CAMERA permission and starts a rear-camera
-  preview. Handles permission denial, opening app settings, missing cameras and retrying.
+- The Scanner button opens `ScannerActivity` with an explicit Intent. CameraX requests
+  camera permission and starts a rear-camera preview. The screen handles permission
+  denial, opening app settings, missing cameras and retrying.
 - Take photo captures one image as a temporary JPEG in the app's private cache.
   Repeated capture requests are blocked while a photo is being taken.
 - After capture, the full image is displayed with its EXIF orientation applied.
   Retake deletes the previous photo and reopens the camera. Capture and image-reading
   errors are shown on screen.
-- A completed photo survives rotation and moving the app to the background.
-  Leaving Scanner through another tab or Back resets the photo. The camera is
-  released during photo review and when leaving the screen; lifecycle handling
-  stops it in the background. Files left after the process ends are cleaned up
-  the next time Scanner opens.
-- OCR, card matching, manual confirmation and adding cards to the collection are
-  not implemented yet. Scanner runs inside MainActivity; a separate ScannerActivity
-  and an explicit Intent to open it have not been added yet.
+- A completed photo survives rotation and moving the app to the background. Back
+  returns to the previous screen and discards the photo. CameraX releases the camera
+  during photo review and when leaving Scanner, and stops it in the background.
+  The next scanner session clears files left after process termination.
+- The scanner warns in low light while leaving capture available. The next step
+  is manual catalog confirmation, followed by text recognition and card matching.
 
 ### Settings
 
-- Supports manual Light/Dark switching across the app, including the system bars.
+- Supports Light, Dark, and Auto themes across the app, including the system bars.
 - The selection is stored locally in SharedPreferences and restored after restart.
   Dark is the default.
-- Auto mode and ambient light sensor integration are not implemented yet.
+- Auto uses the ambient light sensor and falls back to the system theme while
+  waiting for a reading or when the sensor is unavailable.
 
 ## Architecture Perspective
 
 ### Phase 1
 
-The current implementation uses one Android module, `app`. Its only activity,
-`MainActivity`, is the entry point. It applies the Material 3 theme and hosts
-`CompanionApp`, which contains the top and bottom bars. `AppNavHost` defines the
-Compose Navigation routes. Card and deck routes carry the selected record's ID.
+The app uses one Android module, `app`. `MainActivity` is the entry point and
+hosts `CompanionApp`, which contains the top and bottom bars. `AppNavHost` defines
+the Compose Navigation routes. Card and deck routes carry the selected record's ID.
+`MainActivity` and `ScannerActivity` share the Material 3 theme and system bar setup.
 
 The app follows a simple MVVM structure. Compose screens display state from
 ViewModels and pass user actions back to them. When the state changes, Compose
@@ -106,9 +106,8 @@ updates the parts of the screen that use it.
   Home and My decks. Each `Deck` stores Legend IDs and `DeckItem` records with
   card IDs and copy counts. Kotlin functions in `domain` calculate RAM limits
   and deck warnings.
-- Scanner is a tab in the same activity. CameraX handles the camera preview and
-  takes one photo at a time. `ScannerViewModel` tracks the capture and the photo
-  being reviewed.
+- CameraX handles the preview and takes one photo at a time in `ScannerActivity`.
+  The Activity's `ScannerViewModel` tracks the capture and photo review.
 
 #### State and storage
 

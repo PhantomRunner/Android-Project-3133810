@@ -42,7 +42,7 @@ import com.example.cyberpunktcg.sensors.LightSensorState
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean, light: StateFlow<LightSensorState>) {
+internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSensorState>) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -66,8 +66,8 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean, light
         cameraError = null
     }
 
-    LaunchedEffect(isActive) {
-        if (isActive && !initialRequestMade) {
+    LaunchedEffect(Unit) {
+        if (!initialRequestMade) {
             initialRequestMade = true
             if (!permissionGranted) permissionLauncher.launch(Manifest.permission.CAMERA)
         }
@@ -87,7 +87,6 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, isActive: Boolean, light
     }
 
     when {
-        !isActive -> Box(modifier = Modifier.fillMaxSize())
         state.photoFile != null -> PhotoReview(photo = state.photoFile, onRetake = viewModel::reset)
         !permissionGranted -> {
             ScannerMessage(
