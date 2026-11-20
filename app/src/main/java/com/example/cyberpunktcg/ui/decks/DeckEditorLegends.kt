@@ -116,15 +116,16 @@ internal fun DeckEditorLegendPicker(
                     Text(stringResource(R.string.deck_no_owned_legends))
                 }
             }
-            items(ownedLegends, key = { it.id }) { legend ->
+            items(ownedLegends, key = { "legend_${it.id}" }) { legend ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LegendArtworkPreview(legend)
                     Text(stringResource(R.string.card_ram, legend.ram.cardStat()), style = MaterialTheme.typography.labelMedium)
                     Text(stringResource(R.string.collection_owned_count, ownedQuantity(legend.id)), style = MaterialTheme.typography.labelMedium)
+                    val selectLabel = stringResource(R.string.select_named_legend, legend.name)
                     Button(
                         onClick = { onSelectLegend(legend.id) },
                         enabled = canAddLegend(legend.id),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().semantics { contentDescription = selectLabel },
                     ) { Text(stringResource(R.string.select_legend)) }
                 }
             }

@@ -121,6 +121,7 @@
     <string name="legend_slot">Legend slot %1$d</string>
     <string name="choose_legend">Choose Legend</string>
     <string name="select_legend">Select Legend</string>
+    <string name="select_named_legend">Select %1$s as a Legend</string>
     <string name="remove_legend">Remove Legend</string>
     <string name="remove_named_legend">Remove %1$s from Legends</string>
     <string name="legend_selection_hint">Choose up to three owned Legends with different names.</string>
@@ -132,6 +133,9 @@
     <string name="deck_not_found">Deck not found</string>
     <string name="back_to_my_decks">Back to My Decks</string>
     <string name="deck_ram_limits">RAM limits</string>
+    <string name="deck_checks_attention">Some checks need attention.</string>
+    <string name="show_deck_checks">Show deck checks</string>
+    <string name="hide_deck_checks">Hide deck checks</string>
     <string name="deck_color_ram_limit">%1$s RAM limit: %2$s</string>
     <string name="deck_unknown_ram">Some RAM values are unknown. Check those cards before using this deck.</string>
     <string name="deck_missing_copies">%1$s needs %2$d copies. Your collection has %3$d.</string>
