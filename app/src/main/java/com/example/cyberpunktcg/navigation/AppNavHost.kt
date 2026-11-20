@@ -94,6 +94,7 @@ internal fun AppNavHost(
             }
             MyDecksScreen(
                 decks = decksViewModel.decks,
+                legends = decksViewModel.legends,
                 onDeleteDeck = { id -> scope.launch { decksViewModel.deleteDeck(id) } },
                 onCreateDeck = { name ->
                     scope.launch {
