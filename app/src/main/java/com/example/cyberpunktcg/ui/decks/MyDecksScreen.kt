@@ -41,6 +41,7 @@ internal fun MyDecksScreen(
     onCreateDeck: (String) -> Unit,
     onOpenDeck: (String) -> Unit,
     onDeleteDeck: (String) -> Unit,
+    onShareDeck: (String) -> Unit,
     shakeEvents: Flow<Unit>,
     accelerometerAvailable: Boolean,
     onRandomDeck: () -> Unit,
@@ -90,6 +91,7 @@ internal fun MyDecksScreen(
                         legends = deck.legendIds.mapNotNull { id -> legends.firstOrNull { it.id == id } },
                         onClick = { onOpenDeck(deck.id) },
                         onDelete = { pendingDeleteId = deck.id },
+                        onShare = { onShareDeck(deck.id) },
                     )
                 }
             }

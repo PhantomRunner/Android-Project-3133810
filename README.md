@@ -59,6 +59,7 @@ in `local-assets/debug` when the property is omitted.
   copy counts and access to full card details. Previewing does not save changes.
 - Saved decks survive app restarts. Collection changes update availability and
   warnings about missing copies while retaining saved deck entries.
+- Share on a saved deck opens Android's share chooser with a plain-text deck list.
 
 ### Scanner
 

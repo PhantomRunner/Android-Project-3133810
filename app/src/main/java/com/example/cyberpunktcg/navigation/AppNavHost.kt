@@ -31,6 +31,7 @@ import com.example.cyberpunktcg.ui.decks.DeckNotFoundScreen
 import com.example.cyberpunktcg.ui.decks.DecksViewModel
 import com.example.cyberpunktcg.ui.decks.DeckDataState
 import com.example.cyberpunktcg.ui.decks.MyDecksScreen
+import com.example.cyberpunktcg.ui.decks.shareDeck
 import com.example.cyberpunktcg.ui.home.HomeScreen
 import com.example.cyberpunktcg.ui.home.HomeViewModel
 import com.example.cyberpunktcg.ui.scanner.ScannerScreen
@@ -99,6 +100,7 @@ internal fun AppNavHost(
         }
         collectionDestinations(navController)
         deckDestination(AppDestination.Decks, decksViewModel) {
+            val context = LocalContext.current
             val openDeck: (String) -> Unit = { deckId ->
                 navController.navigate(deckEditorRoute(deckId)) { launchSingleTop = true }
             }
@@ -106,6 +108,9 @@ internal fun AppNavHost(
                 decks = decksViewModel.decks,
                 legends = decksViewModel.legends,
                 onDeleteDeck = { id -> scope.launch { decksViewModel.deleteDeck(id) } },
+                onShareDeck = { id ->
+                    decksViewModel.findDeck(id)?.let { shareDeck(context, it, decksViewModel::findCard) }
+                },
                 onCreateDeck = { name ->
                     scope.launch {
                         val deck = decksViewModel.createDeck(name)

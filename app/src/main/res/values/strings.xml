@@ -155,6 +155,9 @@
     <string name="deck_preview_notice">Working copy. Use Save draft in the editor to keep your changes.</string>
     <string name="no_legends_selected">No Legends selected.</string>
     <string name="unnamed_draft">Unnamed draft</string>
+    <string name="share_deck">Share</string>
+    <string name="share_named_deck">Share %1$s</string>
+    <string name="deck_share_unavailable">No app is available to share this deck.</string>
     <string name="delete_deck">Delete</string>
     <string name="delete_named_deck">Delete deck %1$s</string>
     <string name="delete_deck_title">Delete deck?</string>

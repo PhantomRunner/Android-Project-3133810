@@ -2,6 +2,7 @@ package com.example.cyberpunktcg.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,6 +31,7 @@ internal fun DeckSummaryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onDelete: (() -> Unit)? = null,
+    onShare: (() -> Unit)? = null,
 ) {
     OutlinedCard(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Column(
@@ -59,14 +61,26 @@ internal fun DeckSummaryCard(
                 Text(stringResource(R.string.deck_main_count, deck.mainCardCount), modifier = Modifier.weight(1f))
                 Text(stringResource(R.string.deck_legend_count, deck.legendIds.size), modifier = Modifier.weight(1f))
             }
-            if (onDelete != null) {
-                val deleteLabel = stringResource(R.string.delete_named_deck, deck.name)
-                TextButton(
-                    onClick = onDelete,
-                    modifier = Modifier.align(Alignment.End).semantics { contentDescription = deleteLabel },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            if (onShare != null || onDelete != null) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 ) {
-                    Text(stringResource(R.string.delete_deck))
+                    if (onShare != null) {
+                        val shareLabel = stringResource(R.string.share_named_deck, deck.name)
+                        TextButton(
+                            onClick = onShare,
+                            modifier = Modifier.semantics { contentDescription = shareLabel },
+                        ) { Text(stringResource(R.string.share_deck)) }
+                    }
+                    if (onDelete != null) {
+                        val deleteLabel = stringResource(R.string.delete_named_deck, deck.name)
+                        TextButton(
+                            onClick = onDelete,
+                            modifier = Modifier.semantics { contentDescription = deleteLabel },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        ) { Text(stringResource(R.string.delete_deck)) }
+                    }
                 }
             }
         }
