@@ -4,10 +4,13 @@ import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -70,6 +73,35 @@ class CollectionDatabaseTest {
             repeat(13) { launch(Dispatchers.Default) { dao.changeQuantity("paper", -1) } }
         }
         assertNull(dao.observePrintings().first().single { it.printing.id == "paper" }.owned)
+    }
+
+    @Test
+    fun statisticsObserveQuantityChangesAndSurviveReimportAndReopen() = runBlocking {
+        val catalog = parseCollectionCatalog(SAMPLE_CATALOG)
+        val dao = database.collectionDao()
+        dao.importCatalog(catalog)
+        val repository = CollectionRepository(context, dao)
+        val updates = Channel<CollectionStatistics>(Channel.UNLIMITED)
+        val observer = launch { repository.statistics.collect { updates.send(it) } }
+        try {
+            assertEquals(CollectionStatistics(0L, 0, 0), withTimeout(5_000) { updates.receive() })
+            repository.changeQuantity("paper", 1)
+            assertEquals(CollectionStatistics(1L, 1, 1), withTimeout(5_000) { updates.receive() })
+            repository.changeQuantity("paper", 1)
+            assertEquals(CollectionStatistics(2L, 1, 1), withTimeout(5_000) { updates.receive() })
+            repository.changeQuantity("foil", 1)
+            assertEquals(CollectionStatistics(3L, 1, 2), withTimeout(5_000) { updates.receive() })
+            repository.changeQuantity("foil", -1)
+            assertEquals(CollectionStatistics(2L, 1, 1), withTimeout(5_000) { updates.receive() })
+            dao.importCatalog(catalog)
+        } finally {
+            observer.cancelAndJoin()
+            updates.close()
+        }
+        database.close()
+        openDatabase()
+        val reopened = CollectionRepository(context, database.collectionDao())
+        assertEquals(CollectionStatistics(2L, 1, 1), reopened.statistics.first())
     }
 
     private companion object {

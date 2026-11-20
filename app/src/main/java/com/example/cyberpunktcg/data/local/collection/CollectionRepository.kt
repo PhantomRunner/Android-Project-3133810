@@ -2,6 +2,9 @@ package com.example.cyberpunktcg.data.local.collection
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 
@@ -14,6 +17,9 @@ internal class CollectionRepository(
     private val assets = context.applicationContext.assets
 
     val printings = dao.observePrintings()
+    val statistics = printings.map(::calculateCollectionStatistics)
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
 
     suspend fun loadCatalog(): Set<String>? {
         val catalog = withContext(Dispatchers.IO) {
