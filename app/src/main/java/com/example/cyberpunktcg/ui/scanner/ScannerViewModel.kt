@@ -149,6 +149,12 @@ internal class ScannerViewModel(
         )
     }
 
+    fun retryRecognition() {
+        val state = uiState
+        val photo = state.photoFile ?: return
+        if (state.ocr == ScannerOcrState.Failed) recognizePhoto(photo)
+    }
+
     private fun recognizePhoto(photo: File) {
         val photoRequestId = requestId
         uiState = uiState.copy(ocr = ScannerOcrState.Reading)

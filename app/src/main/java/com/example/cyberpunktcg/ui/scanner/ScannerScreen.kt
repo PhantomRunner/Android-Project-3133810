@@ -91,6 +91,7 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSe
             photo = state.photoFile,
             ocr = state.ocr,
             onRetake = viewModel::reset,
+            onRetry = viewModel::retryRecognition,
         )
         !permissionGranted -> {
             ScannerMessage(

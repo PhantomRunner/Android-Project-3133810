@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,7 +38,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-internal fun PhotoReview(photo: File, ocr: ScannerOcrState, onRetake: () -> Unit) {
+internal fun PhotoReview(
+    photo: File,
+    ocr: ScannerOcrState,
+    onRetake: () -> Unit,
+    onRetry: () -> Unit,
+) {
     var bitmap by remember(photo) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(photo) { mutableStateOf(true) }
     LaunchedEffect(photo) {
@@ -85,10 +91,13 @@ internal fun PhotoReview(photo: File, ocr: ScannerOcrState, onRetake: () -> Unit
                         ScannerOcrState.Idle -> Unit
                         ScannerOcrState.Reading -> Text(stringResource(R.string.scanner_ocr_reading))
                         ScannerOcrState.Empty -> Text(stringResource(R.string.scanner_ocr_empty))
-                        ScannerOcrState.Failed -> Text(
-                            stringResource(R.string.scanner_ocr_failed),
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                        ScannerOcrState.Failed -> {
+                            Text(
+                                stringResource(R.string.scanner_ocr_failed),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            TextButton(onClick = onRetry) { Text(stringResource(R.string.camera_retry)) }
+                        }
                         is ScannerOcrState.Recognized -> {
                             Text(
                                 stringResource(R.string.scanner_ocr_result),
