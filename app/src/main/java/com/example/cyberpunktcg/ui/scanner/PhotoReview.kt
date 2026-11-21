@@ -1,9 +1,6 @@
 package com.example.cyberpunktcg.ui.scanner
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Matrix
-import android.media.ExifInterface
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +40,11 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
     var isLoading by remember(photo) { mutableStateOf(true) }
     LaunchedEffect(photo) {
         bitmap = withContext(Dispatchers.IO) {
-            try { decodePhoto(photo) } catch (_: IOException) { null }
+            try {
+                decodeScannerPhoto(photo, maxSide = 1600)
+            } catch (_: IOException) {
+                null
+            }
         }
         isLoading = false
     }
@@ -79,33 +80,4 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
             }
         }
     }
-}
-
-private fun decodePhoto(photo: File): Bitmap {
-    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    BitmapFactory.decodeFile(photo.absolutePath, options)
-    if (options.outWidth <= 0 || options.outHeight <= 0) throw IOException("Unreadable photograph")
-
-    var sampleSize = 1
-    while (maxOf(options.outWidth, options.outHeight) / sampleSize > 1600) sampleSize *= 2
-    options.inJustDecodeBounds = false
-    options.inSampleSize = sampleSize
-    val bitmap = BitmapFactory.decodeFile(photo.absolutePath, options)
-        ?: throw IOException("Unable to decode photograph")
-    val orientation = ExifInterface(photo.absolutePath).getAttributeInt(
-        ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL,
-    )
-    val matrix = Matrix()
-    when (orientation) {
-        ExifInterface.ORIENTATION_ROTATE_90, ExifInterface.ORIENTATION_TRANSPOSE -> matrix.postRotate(90f)
-        ExifInterface.ORIENTATION_ROTATE_180, ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postRotate(180f)
-        ExifInterface.ORIENTATION_ROTATE_270, ExifInterface.ORIENTATION_TRANSVERSE -> matrix.postRotate(270f)
-    }
-    if (orientation in listOf(
-        ExifInterface.ORIENTATION_FLIP_HORIZONTAL, ExifInterface.ORIENTATION_FLIP_VERTICAL,
-        ExifInterface.ORIENTATION_TRANSPOSE, ExifInterface.ORIENTATION_TRANSVERSE,
-    )) matrix.postScale(-1f, 1f)
-    val oriented = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-    if (oriented !== bitmap) bitmap.recycle()
-    return oriented
 }
