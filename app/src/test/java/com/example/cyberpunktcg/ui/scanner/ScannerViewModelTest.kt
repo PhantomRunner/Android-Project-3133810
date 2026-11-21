@@ -2,21 +2,33 @@ package com.example.cyberpunktcg.ui.scanner
 
 import androidx.lifecycle.ViewModelStore
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ScannerViewModelTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+
+    @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After fun tearDown() = Dispatchers.resetMain()
 
     @Test
     fun onlyOneCaptureIsAllowedUntilRetake() = runBlocking {
@@ -137,7 +149,7 @@ class ScannerViewModelTest {
         return scanner(temporaryFolder.newFolder()).also { it.prepare() }
     }
 
-    private fun scanner(directory: File) = ScannerViewModel(directory) {
+    private fun scanner(directory: File) = ScannerViewModel(directory, recognizeText = { "" }) {
         throw AssertionError("Photo capture must not change the collection")
     }
 

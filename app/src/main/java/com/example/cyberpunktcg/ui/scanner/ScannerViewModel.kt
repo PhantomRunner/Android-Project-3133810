@@ -10,8 +10,10 @@ import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.async
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -20,9 +22,18 @@ internal data class ScannerUiState(
     val isPreparing: Boolean = true,
     val isCapturing: Boolean = false,
     val hasCaptureError: Boolean = false,
+    val ocr: ScannerOcrState = ScannerOcrState.Idle,
 )
 
 internal data class PhotoCaptureRequest(val id: Long, val file: File)
+
+internal sealed interface ScannerOcrState {
+    data object Idle : ScannerOcrState
+    data object Reading : ScannerOcrState
+    data class Recognized(val text: String) : ScannerOcrState
+    data object Empty : ScannerOcrState
+    data object Failed : ScannerOcrState
+}
 
 internal sealed interface ManualAddState {
     data object Inactive : ManualAddState
@@ -39,6 +50,7 @@ internal enum class ManualAddError { SAVE_FAILED, QUANTITY_LIMIT }
 
 internal class ScannerViewModel(
     private val photoDirectory: File,
+    private val recognizeText: suspend (File) -> String,
     private val addOwnedCopy: suspend (String) -> Boolean,
 ) : ViewModel() {
     var uiState by mutableStateOf(ScannerUiState())
@@ -48,6 +60,7 @@ internal class ScannerViewModel(
 
     private var requestId = 0L
     private var pendingCapture: PhotoCaptureRequest? = null
+    private var recognitionJob: Job? = null
     private var closed = false
 
 
@@ -97,15 +110,16 @@ internal class ScannerViewModel(
 
     fun photoCaptured(request: PhotoCaptureRequest) {
         if (closed || request != pendingCapture) {
-            deletePhoto(request.file)
+            if (request.file != uiState.photoFile) deletePhoto(request.file)
             return
         }
         pendingCapture = null
         uiState = uiState.copy(photoFile = request.file, isCapturing = false, hasCaptureError = false)
+        recognizePhoto(request.file)
     }
 
     fun captureFailed(request: PhotoCaptureRequest) {
-        deletePhoto(request.file)
+        if (request.file != uiState.photoFile) deletePhoto(request.file)
         if (!closed && request == pendingCapture) {
             pendingCapture = null
             uiState = uiState.copy(isCapturing = false, hasCaptureError = true)
@@ -122,10 +136,33 @@ internal class ScannerViewModel(
 
     fun reset() {
         ++requestId
+        recognitionJob?.cancel()
+        recognitionJob = null
         deletePhoto(pendingCapture?.file)
         deletePhoto(uiState.photoFile)
         pendingCapture = null
-        uiState = uiState.copy(photoFile = null, isCapturing = false, hasCaptureError = false)
+        uiState = uiState.copy(
+            photoFile = null,
+            isCapturing = false,
+            hasCaptureError = false,
+            ocr = ScannerOcrState.Idle,
+        )
+    }
+
+    private fun recognizePhoto(photo: File) {
+        val photoRequestId = requestId
+        uiState = uiState.copy(ocr = ScannerOcrState.Reading)
+        recognitionJob = viewModelScope.launch {
+            val result = try {
+                val text = recognizeText(photo)
+                if (text.isBlank()) ScannerOcrState.Empty else ScannerOcrState.Recognized(text)
+            } catch (_: Exception) {
+                ensureActive()
+                ScannerOcrState.Failed
+            }
+            ensureActive()
+            if (photoRequestId == requestId) uiState = uiState.copy(ocr = result)
+        }
     }
 
     fun findCardManually() {

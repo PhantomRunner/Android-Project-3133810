@@ -107,5 +107,6 @@ class ScannerManualAddTest {
     }
 
     private fun scanner(addOwnedCopy: suspend (String) -> Boolean) =
-        ScannerViewModel(temporaryFolder.newFolder(), addOwnedCopy).also { store.put("scanner", it) }
+        ScannerViewModel(temporaryFolder.newFolder(), recognizeText = { "" }, addOwnedCopy = addOwnedCopy)
+            .also { store.put("scanner", it) }
 }

@@ -16,7 +16,11 @@ class ScannerActivity : ComponentActivity() {
         val factory = viewModelFactory {
             initializer {
                 val collection = CollectionRepository(applicationContext)
-                ScannerViewModel(photoDirectory) { printingId -> collection.changeQuantity(printingId, 1) }
+                ScannerViewModel(
+                    photoDirectory = photoDirectory,
+                    recognizeText = ScannerTextRecognizer()::recognize,
+                    addOwnedCopy = { printingId -> collection.changeQuantity(printingId, 1) },
+                )
             }
         }
         val scanner = ViewModelProvider(this, factory)[ScannerViewModel::class.java]

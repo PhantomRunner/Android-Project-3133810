@@ -87,7 +87,11 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSe
     }
 
     when {
-        state.photoFile != null -> PhotoReview(photo = state.photoFile, onRetake = viewModel::reset)
+        state.photoFile != null -> PhotoReview(
+            photo = state.photoFile,
+            ocr = state.ocr,
+            onRetake = viewModel::reset,
+        )
         !permissionGranted -> {
             ScannerMessage(
                 messageResId = R.string.camera_permission_message,

@@ -5,9 +5,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -35,7 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
+internal fun PhotoReview(photo: File, ocr: ScannerOcrState, onRetake: () -> Unit) {
     var bitmap by remember(photo) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(photo) { mutableStateOf(true) }
     LaunchedEffect(photo) {
@@ -50,34 +52,59 @@ internal fun PhotoReview(photo: File, onRetake: () -> Unit) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier.weight(1f).fillMaxWidth().background(MaterialTheme.colorScheme.surface),
-            contentAlignment = Alignment.Center,
-        ) {
-            val image = bitmap
-            when {
-                isLoading -> CircularProgressIndicator()
-                image != null -> Image(
-                    bitmap = image.asImageBitmap(),
-                    contentDescription = stringResource(R.string.camera_captured_photo),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit,
-                )
-                else -> Text(
-                    stringResource(R.string.camera_photo_unavailable),
-                    modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                )
+        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val photoHeight = (maxHeight * 0.65f).coerceAtMost(420.dp)
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(photoHeight)
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val image = bitmap
+                    when {
+                        isLoading -> CircularProgressIndicator()
+                        image != null -> Image(
+                            bitmap = image.asImageBitmap(),
+                            contentDescription = stringResource(R.string.camera_captured_photo),
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Fit,
+                        )
+                        else -> Text(
+                            stringResource(R.string.camera_photo_unavailable),
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    when (ocr) {
+                        ScannerOcrState.Idle -> Unit
+                        ScannerOcrState.Reading -> Text(stringResource(R.string.scanner_ocr_reading))
+                        ScannerOcrState.Empty -> Text(stringResource(R.string.scanner_ocr_empty))
+                        ScannerOcrState.Failed -> Text(
+                            stringResource(R.string.scanner_ocr_failed),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        is ScannerOcrState.Recognized -> {
+                            Text(
+                                stringResource(R.string.scanner_ocr_result),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(ocr.text)
+                        }
+                    }
+                }
             }
         }
-        Column(
-            modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+        Button(
+            onClick = onRetake,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            Button(onClick = onRetake, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.camera_retake))
-            }
+            Text(stringResource(R.string.camera_retake))
         }
     }
 }

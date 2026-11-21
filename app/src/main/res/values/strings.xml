@@ -77,6 +77,10 @@
     <string name="camera_captured_photo">Captured photo</string>
     <string name="camera_photo_unavailable">Photo is unavailable. Please retake it.</string>
     <string name="camera_retake">Retake</string>
+    <string name="scanner_ocr_reading">Reading text…</string>
+    <string name="scanner_ocr_result">Recognized text</string>
+    <string name="scanner_ocr_empty">No text found</string>
+    <string name="scanner_ocr_failed">Could not recognize text.</string>
     <string name="scanner_find_manually">Find card manually</string>
     <string name="scanner_select_printing">Select this edition</string>
     <string name="scanner_confirm_printing">Confirm edition</string>
