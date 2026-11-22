@@ -71,14 +71,17 @@ in `local-assets/debug` when the property is omitted.
 - After capture, the full image is displayed with its EXIF orientation applied.
   Retake deletes the previous photo and reopens the camera. Capture and image-reading
   errors are shown on screen.
-- A completed photo survives rotation and moving the app to the background. Back
-  returns to the previous screen and discards the photo. CameraX releases the camera
+- Scanner automatically recognizes Latin-script text in the captured photo and shows
+  the full result with line breaks in the scrollable photo review. The ML Kit model
+  is bundled with the app and works offline on first use. The review shows when no
+  text is found and offers Retry if recognition fails.
+- A completed photo and its recognized text survive rotation and moving the app
+  to the background. Back discards the photo and its text. CameraX releases the camera
   during photo review and when leaving Scanner, and stops it in the background.
   The next scanner session clears files left after process termination.
 - The scanner warns in low light while leaving capture available. Find card manually
   opens the offline catalog from capture or photo review, including after permission
-  denial or a camera error. Choose an edition and confirm to add one copy. Text
-  recognition and card matching are the next steps.
+  denial or a camera error. Choose an edition and confirm to add one copy.
 
 ### Settings
 
