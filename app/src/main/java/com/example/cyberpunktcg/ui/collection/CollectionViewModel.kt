@@ -28,7 +28,14 @@ internal data class CollectionUiState(
     val catalog: CatalogStatus = CatalogStatus.Loading,
     val readFailed: Boolean = false,
     val saveFailed: Boolean = false,
-)
+) {
+    fun activeCatalogPrintings(): List<CollectionPrinting>? {
+        val readyCatalog = catalog as? CatalogStatus.Ready ?: return null
+        val activePrintings = printings?.filter { it.printing.id in readyCatalog.printingIds } ?: return null
+        // Room can emit the imported rows after loadCatalog() returns.
+        return activePrintings.takeIf { it.size == readyCatalog.printingIds.size }
+    }
+}
 
 internal class CollectionViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = CollectionRepository(application)

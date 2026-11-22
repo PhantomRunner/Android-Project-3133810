@@ -42,7 +42,7 @@ internal fun CatalogBrowser(
         CollectionReadError(onRetry)
         return
     }
-    val catalog = when (val status = state.catalog) {
+    when (state.catalog) {
         CatalogStatus.Loading -> {
             CollectionLoading()
             return
@@ -57,13 +57,10 @@ internal fun CatalogBrowser(
             }
             return
         }
-        is CatalogStatus.Ready -> status
+        is CatalogStatus.Ready -> Unit
     }
-    val printings = remember(state.printings, catalog) {
-        state.printings.orEmpty().filter { it.printing.id in catalog.printingIds }
-    }
-    // The Room query may emit the imported rows after the import itself returns.
-    if (printings.size < catalog.printingIds.size) {
+    val printings = remember(state.printings, state.catalog) { state.activeCatalogPrintings() }
+    if (printings == null) {
         CollectionLoading()
         return
     }
