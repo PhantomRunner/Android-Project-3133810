@@ -7,6 +7,7 @@ import com.example.cyberpunktcg.data.local.collection.CardSetEntity
 import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
+import com.example.cyberpunktcg.ui.collection.ActiveCatalog
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +108,10 @@ class ScannerManualAddTest {
     }
 
     private fun scanner(addOwnedCopy: suspend (String) -> Boolean) =
-        ScannerViewModel(temporaryFolder.newFolder(), recognizeText = { "" }, addOwnedCopy = addOwnedCopy)
-            .also { store.put("scanner", it) }
+        ScannerViewModel(
+            photoDirectory = temporaryFolder.newFolder(),
+            recognizeText = { "" },
+            loadCatalog = { ActiveCatalog.Missing },
+            addOwnedCopy = addOwnedCopy,
+        ).also { store.put("scanner", it) }
 }

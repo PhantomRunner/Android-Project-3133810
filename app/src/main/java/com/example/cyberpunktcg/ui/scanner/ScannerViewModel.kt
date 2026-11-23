@@ -6,9 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
+import com.example.cyberpunktcg.ui.collection.ActiveCatalog
 import java.io.File
 import java.io.IOException
+import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asExecutor
@@ -23,6 +26,7 @@ internal data class ScannerUiState(
     val isCapturing: Boolean = false,
     val hasCaptureError: Boolean = false,
     val ocr: ScannerOcrState = ScannerOcrState.Idle,
+    val matchState: ScannerMatchState = ScannerMatchState.Idle,
 )
 
 internal data class PhotoCaptureRequest(val id: Long, val file: File)
@@ -33,6 +37,14 @@ internal sealed interface ScannerOcrState {
     data class Recognized(val text: String) : ScannerOcrState
     data object Empty : ScannerOcrState
     data object Failed : ScannerOcrState
+}
+
+internal sealed interface ScannerMatchState {
+    data object Idle : ScannerMatchState
+    data object Searching : ScannerMatchState
+    data object CatalogMissing : ScannerMatchState
+    data object Failed : ScannerMatchState
+    data class Results(val cards: List<ScannerCardMatch>) : ScannerMatchState
 }
 
 internal sealed interface ManualAddState {
@@ -51,6 +63,8 @@ internal enum class ManualAddError { SAVE_FAILED, QUANTITY_LIMIT }
 internal class ScannerViewModel(
     private val photoDirectory: File,
     private val recognizeText: suspend (File) -> String,
+    private val loadCatalog: suspend (retry: Boolean) -> ActiveCatalog,
+    private val matchingDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val addOwnedCopy: suspend (String) -> Boolean,
 ) : ViewModel() {
     var uiState by mutableStateOf(ScannerUiState())
@@ -60,7 +74,7 @@ internal class ScannerViewModel(
 
     private var requestId = 0L
     private var pendingCapture: PhotoCaptureRequest? = null
-    private var recognitionJob: Job? = null
+    private var photoJob: Job? = null
     private var closed = false
 
 
@@ -136,8 +150,8 @@ internal class ScannerViewModel(
 
     fun reset() {
         ++requestId
-        recognitionJob?.cancel()
-        recognitionJob = null
+        photoJob?.cancel()
+        photoJob = null
         deletePhoto(pendingCapture?.file)
         deletePhoto(uiState.photoFile)
         pendingCapture = null
@@ -146,6 +160,7 @@ internal class ScannerViewModel(
             isCapturing = false,
             hasCaptureError = false,
             ocr = ScannerOcrState.Idle,
+            matchState = ScannerMatchState.Idle,
         )
     }
 
@@ -155,10 +170,19 @@ internal class ScannerViewModel(
         if (state.ocr == ScannerOcrState.Failed) recognizePhoto(photo)
     }
 
+    fun retryMatching() {
+        val state = uiState
+        if (state.matchState != ScannerMatchState.Failed) return
+        val text = (state.ocr as? ScannerOcrState.Recognized)?.text ?: return
+        val photoRequestId = requestId
+        uiState = state.copy(matchState = ScannerMatchState.Searching)
+        photoJob = viewModelScope.launch { findMatches(text, photoRequestId, retry = true) }
+    }
+
     private fun recognizePhoto(photo: File) {
         val photoRequestId = requestId
-        uiState = uiState.copy(ocr = ScannerOcrState.Reading)
-        recognitionJob = viewModelScope.launch {
+        uiState = uiState.copy(ocr = ScannerOcrState.Reading, matchState = ScannerMatchState.Idle)
+        photoJob = viewModelScope.launch {
             val result = try {
                 val text = recognizeText(photo)
                 if (text.isBlank()) ScannerOcrState.Empty else ScannerOcrState.Recognized(text)
@@ -167,8 +191,31 @@ internal class ScannerViewModel(
                 ScannerOcrState.Failed
             }
             ensureActive()
-            if (photoRequestId == requestId) uiState = uiState.copy(ocr = result)
+            if (photoRequestId != requestId) return@launch
+            if (result is ScannerOcrState.Recognized) {
+                uiState = uiState.copy(ocr = result, matchState = ScannerMatchState.Searching)
+                findMatches(result.text, photoRequestId, retry = false)
+            } else {
+                uiState = uiState.copy(ocr = result)
+            }
         }
+    }
+
+    private suspend fun findMatches(text: String, photoRequestId: Long, retry: Boolean) {
+        val result = try {
+            when (val catalog = loadCatalog(retry)) {
+                ActiveCatalog.Missing -> ScannerMatchState.CatalogMissing
+                ActiveCatalog.Failed -> ScannerMatchState.Failed
+                is ActiveCatalog.Ready -> withContext(matchingDispatcher) {
+                    ScannerMatchState.Results(matchScannerCards(text, catalog.printings))
+                }
+            }
+        } catch (_: Exception) {
+            coroutineContext.ensureActive()
+            ScannerMatchState.Failed
+        }
+        coroutineContext.ensureActive()
+        if (photoRequestId == requestId) uiState = uiState.copy(matchState = result)
     }
 
     fun findCardManually() {

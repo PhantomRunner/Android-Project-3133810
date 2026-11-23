@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,8 +42,10 @@ import kotlinx.coroutines.withContext
 internal fun PhotoReview(
     photo: File,
     ocr: ScannerOcrState,
+    matchState: ScannerMatchState,
     onRetake: () -> Unit,
     onRetry: () -> Unit,
+    onRetryMatching: () -> Unit,
 ) {
     var bitmap by remember(photo) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(photo) { mutableStateOf(true) }
@@ -99,6 +102,7 @@ internal fun PhotoReview(
                             TextButton(onClick = onRetry) { Text(stringResource(R.string.camera_retry)) }
                         }
                         is ScannerOcrState.Recognized -> {
+                            ScannerSuggestions(matchState, onRetryMatching)
                             Text(
                                 stringResource(R.string.scanner_ocr_result),
                                 style = MaterialTheme.typography.titleMedium,
@@ -114,6 +118,45 @@ internal fun PhotoReview(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(stringResource(R.string.camera_retake))
+        }
+    }
+}
+
+@Composable
+private fun ScannerSuggestions(state: ScannerMatchState, onRetry: () -> Unit) {
+    when (state) {
+        ScannerMatchState.Idle -> Unit
+        ScannerMatchState.Searching -> Text(stringResource(R.string.scanner_matches_searching))
+        ScannerMatchState.CatalogMissing -> Text(stringResource(R.string.collection_catalog_missing))
+        ScannerMatchState.Failed -> {
+            Text(
+                stringResource(R.string.collection_catalog_failed),
+                color = MaterialTheme.colorScheme.error,
+            )
+            TextButton(onClick = onRetry) { Text(stringResource(R.string.collection_retry)) }
+        }
+        is ScannerMatchState.Results -> if (state.cards.isEmpty()) {
+            Text(stringResource(R.string.scanner_matches_empty))
+        } else {
+            Text(
+                stringResource(R.string.scanner_matches_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            state.cards.forEach { match ->
+                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(match.card.name, style = MaterialTheme.typography.titleSmall)
+                        if (match.card.subtitle.isNotBlank()) Text(match.card.subtitle)
+                        if (match.isApproximate) {
+                            Text(
+                                stringResource(R.string.scanner_match_possible),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.cyberpunktcg.ui.scanner
 
 import androidx.lifecycle.ViewModelStore
+import com.example.cyberpunktcg.ui.collection.ActiveCatalog
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -149,9 +150,12 @@ class ScannerViewModelTest {
         return scanner(temporaryFolder.newFolder()).also { it.prepare() }
     }
 
-    private fun scanner(directory: File) = ScannerViewModel(directory, recognizeText = { "" }) {
-        throw AssertionError("Photo capture must not change the collection")
-    }
+    private fun scanner(directory: File) = ScannerViewModel(
+        photoDirectory = directory,
+        recognizeText = { "" },
+        loadCatalog = { ActiveCatalog.Missing },
+        addOwnedCopy = { throw AssertionError("Photo capture must not change the collection") },
+    )
 
     private suspend fun awaitDeletion(file: File) {
         withTimeout(5_000) { while (file.exists()) delay(10) }

@@ -81,6 +81,10 @@
     <string name="scanner_ocr_result">Recognized text</string>
     <string name="scanner_ocr_empty">No text found</string>
     <string name="scanner_ocr_failed">Could not recognize text.</string>
+    <string name="scanner_matches_searching">Looking for cards…</string>
+    <string name="scanner_matches_title">Suggested cards</string>
+    <string name="scanner_matches_empty">No matching cards</string>
+    <string name="scanner_match_possible">Possible match</string>
     <string name="scanner_find_manually">Find card manually</string>
     <string name="scanner_select_printing">Select this edition</string>
     <string name="scanner_confirm_printing">Confirm edition</string>

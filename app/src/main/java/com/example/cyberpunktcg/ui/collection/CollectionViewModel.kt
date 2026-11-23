@@ -11,6 +11,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -21,6 +23,12 @@ internal sealed interface CatalogStatus {
     data object Missing : CatalogStatus
     data object Failed : CatalogStatus
     data class Ready(val printingIds: Set<String>) : CatalogStatus
+}
+
+internal sealed interface ActiveCatalog {
+    data object Missing : ActiveCatalog
+    data object Failed : ActiveCatalog
+    data class Ready(val printings: List<CollectionPrinting>) : ActiveCatalog
 }
 
 internal data class CollectionUiState(
@@ -49,6 +57,14 @@ internal class CollectionViewModel(application: Application) : AndroidViewModel(
     init {
         retry()
     }
+
+    suspend fun awaitActiveCatalog(): ActiveCatalog = state.mapNotNull { snapshot ->
+        when {
+            snapshot.readFailed || snapshot.catalog == CatalogStatus.Failed -> ActiveCatalog.Failed
+            snapshot.catalog == CatalogStatus.Missing -> ActiveCatalog.Missing
+            else -> snapshot.activeCatalogPrintings()?.let { ActiveCatalog.Ready(it) }
+        }
+    }.first()
 
     fun retry() {
         if (observeJob?.isActive != true) {

@@ -90,8 +90,10 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSe
         state.photoFile != null -> PhotoReview(
             photo = state.photoFile,
             ocr = state.ocr,
+            matchState = state.matchState,
             onRetake = viewModel::reset,
             onRetry = viewModel::retryRecognition,
+            onRetryMatching = viewModel::retryMatching,
         )
         !permissionGranted -> {
             ScannerMessage(

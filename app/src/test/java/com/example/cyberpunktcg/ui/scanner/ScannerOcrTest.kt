@@ -1,6 +1,7 @@
 package com.example.cyberpunktcg.ui.scanner
 
 import androidx.lifecycle.ViewModelStore
+import com.example.cyberpunktcg.ui.collection.ActiveCatalog
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
@@ -170,9 +171,12 @@ class ScannerOcrTest {
     }
 
     private suspend fun scanner(recognizeText: suspend (File) -> String): ScannerViewModel {
-        val scanner = ScannerViewModel(temporaryFolder.newFolder(), recognizeText) {
-            error("Text recognition must not change the collection")
-        }
+        val scanner = ScannerViewModel(
+            photoDirectory = temporaryFolder.newFolder(),
+            recognizeText = recognizeText,
+            loadCatalog = { ActiveCatalog.Missing },
+            addOwnedCopy = { error("Text recognition must not change the collection") },
+        )
         store.put("scanner", scanner)
         scanner.prepare()
         return scanner

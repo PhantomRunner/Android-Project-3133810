@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 internal fun ScannerFlow(
     scanner: ScannerViewModel,
+    collection: CollectionViewModel,
     light: StateFlow<LightSensorState>,
     onBack: () -> Unit,
     onDone: () -> Unit,
@@ -63,7 +64,6 @@ internal fun ScannerFlow(
                     }
                 }
                 ManualAddState.Browsing -> savedViews.SaveableStateProvider("catalog") {
-                    val collection: CollectionViewModel = viewModel()
                     val browser: CardBrowserViewModel = viewModel()
                     val catalog by collection.state.collectAsStateWithLifecycle()
                     CatalogBrowser(catalog, browser, collection::retry) { printing, dismiss ->
