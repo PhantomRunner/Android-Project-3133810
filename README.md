@@ -75,8 +75,11 @@ in `local-assets/debug` when the property is omitted.
   the full result with line breaks in the scrollable photo review. The ML Kit model
   is bundled with the app and works offline on first use. The review shows when no
   text is found and offers Retry if recognition fails.
-- A completed photo and its recognized text survive rotation and moving the app
-  to the background. Back discards the photo and its text. CameraX releases the camera
+- The photo review suggests up to five cards from the local catalog using their names
+  and subtitles. Approximate matches are labeled Possible match. Select a card,
+  choose an edition if needed, and confirm to add one copy.
+- A completed photo, its recognized text and suggestions survive rotation and return
+  from the background. Leaving Scanner discards the scan. CameraX releases the camera
   during photo review and when leaving Scanner, and stops it in the background.
   The next scanner session clears files left after process termination.
 - The scanner warns in low light while leaving capture available. Find card manually
