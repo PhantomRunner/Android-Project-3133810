@@ -46,6 +46,7 @@ internal fun PhotoReview(
     onRetake: () -> Unit,
     onRetry: () -> Unit,
     onRetryMatching: () -> Unit,
+    onSelectCard: (String) -> Unit,
 ) {
     var bitmap by remember(photo) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(photo) { mutableStateOf(true) }
@@ -102,7 +103,7 @@ internal fun PhotoReview(
                             TextButton(onClick = onRetry) { Text(stringResource(R.string.camera_retry)) }
                         }
                         is ScannerOcrState.Recognized -> {
-                            ScannerSuggestions(matchState, onRetryMatching)
+                            ScannerSuggestions(matchState, onRetryMatching, onSelectCard)
                             Text(
                                 stringResource(R.string.scanner_ocr_result),
                                 style = MaterialTheme.typography.titleMedium,
@@ -123,7 +124,11 @@ internal fun PhotoReview(
 }
 
 @Composable
-private fun ScannerSuggestions(state: ScannerMatchState, onRetry: () -> Unit) {
+private fun ScannerSuggestions(
+    state: ScannerMatchState,
+    onRetry: () -> Unit,
+    onSelectCard: (String) -> Unit,
+) {
     when (state) {
         ScannerMatchState.Idle -> Unit
         ScannerMatchState.Searching -> Text(stringResource(R.string.scanner_matches_searching))
@@ -143,7 +148,10 @@ private fun ScannerSuggestions(state: ScannerMatchState, onRetry: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
             )
             state.cards.forEach { match ->
-                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                OutlinedCard(
+                    onClick = { onSelectCard(match.card.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(match.card.name, style = MaterialTheme.typography.titleSmall)
                         if (match.card.subtitle.isNotBlank()) Text(match.card.subtitle)

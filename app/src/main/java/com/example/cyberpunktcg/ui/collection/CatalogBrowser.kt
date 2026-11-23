@@ -102,7 +102,7 @@ internal fun CatalogBrowser(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditionPicker(
+internal fun EditionPicker(
     editions: List<CollectionPrinting>,
     saveFailed: Boolean,
     onDismiss: () -> Unit,

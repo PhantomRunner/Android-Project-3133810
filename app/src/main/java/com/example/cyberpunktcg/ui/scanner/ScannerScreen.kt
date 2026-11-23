@@ -94,6 +94,7 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSe
             onRetake = viewModel::reset,
             onRetry = viewModel::retryRecognition,
             onRetryMatching = viewModel::retryMatching,
+            onSelectCard = viewModel::selectSuggestedCard,
         )
         !permissionGranted -> {
             ScannerMessage(

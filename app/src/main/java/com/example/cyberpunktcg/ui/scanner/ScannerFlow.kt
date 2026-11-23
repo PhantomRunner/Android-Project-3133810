@@ -27,6 +27,7 @@ import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 import com.example.cyberpunktcg.ui.collection.CatalogBrowser
 import com.example.cyberpunktcg.ui.collection.CollectionMessage
 import com.example.cyberpunktcg.ui.collection.CollectionViewModel
+import com.example.cyberpunktcg.ui.collection.EditionPicker
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
@@ -62,16 +63,23 @@ internal fun ScannerFlow(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         ) { Text(stringResource(R.string.scanner_find_manually)) }
                     }
+                    scanner.uiState.selectedSuggestion?.let { suggestion ->
+                        EditionPicker(
+                            editions = suggestion.editions,
+                            saveFailed = false,
+                            onDismiss = scanner::dismissSuggestedEditions,
+                        ) { printing, _ ->
+                            SelectScannerEdition { scanner.selectSuggestedEdition(printing.printing.id) }
+                        }
+                    }
                 }
                 ManualAddState.Browsing -> savedViews.SaveableStateProvider("catalog") {
                     val browser: CardBrowserViewModel = viewModel()
                     val catalog by collection.state.collectAsStateWithLifecycle()
                     CatalogBrowser(catalog, browser, collection::retry) { printing, dismiss ->
-                        Button(onClick = {
+                        SelectScannerEdition {
                             dismiss()
                             scanner.selectPrinting(printing)
-                        }, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.scanner_select_printing))
                         }
                     }
                 }
@@ -88,5 +96,12 @@ internal fun ScannerFlow(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SelectScannerEdition(onClick: () -> Unit) {
+    Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.scanner_select_printing))
     }
 }

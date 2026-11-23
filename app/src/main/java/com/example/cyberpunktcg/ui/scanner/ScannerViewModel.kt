@@ -27,6 +27,7 @@ internal data class ScannerUiState(
     val hasCaptureError: Boolean = false,
     val ocr: ScannerOcrState = ScannerOcrState.Idle,
     val matchState: ScannerMatchState = ScannerMatchState.Idle,
+    val selectedSuggestion: ScannerCardMatch? = null,
 )
 
 internal data class PhotoCaptureRequest(val id: Long, val file: File)
@@ -54,11 +55,13 @@ internal sealed interface ManualAddState {
         val printing: CollectionPrinting,
         val isSaving: Boolean = false,
         val error: ManualAddError? = null,
+        val source: ConfirmationSource = ConfirmationSource.CATALOG,
     ) : ManualAddState
     data class Added(val printing: CollectionPrinting) : ManualAddState
 }
 
 internal enum class ManualAddError { SAVE_FAILED, QUANTITY_LIMIT }
+internal enum class ConfirmationSource { CATALOG, SUGGESTION }
 
 internal class ScannerViewModel(
     private val photoDirectory: File,
@@ -161,6 +164,7 @@ internal class ScannerViewModel(
             hasCaptureError = false,
             ocr = ScannerOcrState.Idle,
             matchState = ScannerMatchState.Idle,
+            selectedSuggestion = null,
         )
     }
 
@@ -221,7 +225,35 @@ internal class ScannerViewModel(
     fun findCardManually() {
         if (manualAddState != ManualAddState.Inactive) return
         cancelPendingCapture()
+        dismissSuggestedEditions()
         manualAddState = ManualAddState.Browsing
+    }
+
+    fun selectSuggestedCard(cardId: String) {
+        if (manualAddState != ManualAddState.Inactive) return
+        val results = uiState.matchState as? ScannerMatchState.Results ?: return
+        val suggestion = results.cards.firstOrNull { it.card.id == cardId } ?: return
+        if (suggestion.editions.size == 1) {
+            showSuggestionConfirmation(suggestion.editions.single())
+        } else {
+            uiState = uiState.copy(selectedSuggestion = suggestion)
+        }
+    }
+
+    fun selectSuggestedEdition(printingId: String) {
+        if (manualAddState != ManualAddState.Inactive) return
+        val printing = uiState.selectedSuggestion?.editions
+            ?.firstOrNull { it.printing.id == printingId } ?: return
+        showSuggestionConfirmation(printing)
+    }
+
+    fun dismissSuggestedEditions() {
+        uiState = uiState.copy(selectedSuggestion = null)
+    }
+
+    private fun showSuggestionConfirmation(printing: CollectionPrinting) {
+        dismissSuggestedEditions()
+        manualAddState = ManualAddState.Confirming(printing, source = ConfirmationSource.SUGGESTION)
     }
 
     fun selectPrinting(printing: CollectionPrinting) {
@@ -233,7 +265,12 @@ internal class ScannerViewModel(
     fun backFromManualAdd() {
         when (val state = manualAddState) {
             ManualAddState.Browsing -> manualAddState = ManualAddState.Inactive
-            is ManualAddState.Confirming -> if (!state.isSaving) manualAddState = ManualAddState.Browsing
+            is ManualAddState.Confirming -> if (!state.isSaving) {
+                manualAddState = when (state.source) {
+                    ConfirmationSource.CATALOG -> ManualAddState.Browsing
+                    ConfirmationSource.SUGGESTION -> ManualAddState.Inactive
+                }
+            }
             else -> Unit
         }
     }
