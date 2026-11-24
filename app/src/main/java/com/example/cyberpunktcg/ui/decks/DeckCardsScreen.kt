@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -69,28 +68,38 @@ internal fun DeckCardsScreen(
         onSortDirectionChange = onSortDirectionChange,
         availableTypes = CardType.entries.filter { it != CardType.LEGEND },
         header = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(deck.name, style = MaterialTheme.typography.titleLarge)
-                Text(stringResource(R.string.deck_main_count, deck.mainCardCount))
-                if (validation != null) DeckAllowedColorsText(validation)
-                Text(stringResource(R.string.deck_cards_hint), style = MaterialTheme.typography.bodyMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(deck.name, style = MaterialTheme.typography.titleMedium)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(stringResource(R.string.deck_main_count, deck.mainCardCount))
+                    if (validation != null) DeckAllowedColorsText(validation)
+                }
+                Text(
+                    stringResource(R.string.deck_cards_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         cardContent = { card ->
             val quantity = deck.items.firstOrNull { it.cardId == card.id }?.quantity ?: 0
             val addLabel = stringResource(R.string.add_card_copy, card.name)
             val removeLabel = stringResource(R.string.remove_card_copy, card.name)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 DeckBrowserCardPreview(card)
-                if (validation != null && card.color !in validation.allowedColors) {
-                    CardColorWarningText(card)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        stringResource(R.string.deck_card_copies, quantity),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                    Text(
+                        stringResource(R.string.collection_owned_count, ownedQuantity(card.id)),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
                 }
-                validation?.ramWarnings?.firstOrNull { it.cardId == card.id }?.let { warning ->
-                    CardRamWarningText(warning)
-                }
-                Spacer(Modifier.weight(1f))
-                Text(stringResource(R.string.deck_card_copies, quantity))
-                Text(stringResource(R.string.collection_owned_count, ownedQuantity(card.id)))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(
                         onClick = { onRemoveCard(card.id) },
@@ -105,6 +114,12 @@ internal fun DeckCardsScreen(
                         contentPadding = PaddingValues(8.dp),
                     ) { Text("+") }
                 }
+                if (validation != null && card.color !in validation.allowedColors) {
+                    CardColorWarningText(card)
+                }
+                validation?.ramWarnings?.firstOrNull { it.cardId == card.id }?.let { warning ->
+                    CardRamWarningText(warning)
+                }
             }
         },
     )
@@ -112,7 +127,7 @@ internal fun DeckCardsScreen(
 
 @Composable
 private fun DeckBrowserCardPreview(card: Card) {
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         CardArtworkFrame(card.imagePath, card.color, Modifier.fillMaxWidth())
         Text(
             card.name,

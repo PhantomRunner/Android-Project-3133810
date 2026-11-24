@@ -131,7 +131,7 @@
     <string name="deck_card_copies">Copies: %1$d</string>
     <string name="add_card_copy">Add one %1$s</string>
     <string name="remove_card_copy">Remove one %1$s</string>
-    <string name="deck_cards_hint">Choose from your collection. The + button follows your owned quantity and selected Legend colors. Use Save draft in the editor.</string>
+    <string name="deck_cards_hint">Add owned copies in your Legend colors. Save your draft in the editor.</string>
     <string name="deck_name_required">Enter a deck name.</string>
     <string name="save_draft">Save draft</string>
     <string name="draft_saved">Draft saved on this device.</string>
