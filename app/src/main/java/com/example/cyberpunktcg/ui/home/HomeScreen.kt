@@ -2,7 +2,6 @@ package com.example.cyberpunktcg.ui.home
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -102,7 +100,6 @@ internal fun HomeScreen(
 
 @Composable
 private fun HomeStatistics(state: HomeStatisticsState, onRetry: () -> Unit) {
-    val minimumStatisticWidth = 100.dp * LocalDensity.current.fontScale
     val statistics = (state as? HomeStatisticsState.Ready)?.statistics
     val metrics = listOf(
         R.string.home_total_cards to statistics?.totalCards?.toString(),
@@ -110,22 +107,12 @@ private fun HomeStatistics(state: HomeStatisticsState, onRetry: () -> Unit) {
         R.string.home_owned_editions to statistics?.ownedEditions?.toString(),
     )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            if (maxWidth >= minimumStatisticWidth * metrics.size + 24.dp) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    metrics.forEach { (label, value) ->
-                        HomeStatistic(label, value, Modifier.weight(1f).fillMaxHeight())
-                    }
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    metrics.forEach { (label, value) ->
-                        HomeStatistic(label, value, Modifier.fillMaxWidth())
-                    }
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            metrics.forEach { (label, value) ->
+                HomeStatistic(label, value, Modifier.weight(1f).fillMaxHeight())
             }
         }
         when (state) {
@@ -158,13 +145,14 @@ private fun HomeStatistic(@StringRes labelResId: Int, value: String?, modifier: 
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 value ?: stringResource(R.string.home_statistic_placeholder),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
             )
             Text(
                 text = stringResource(labelResId),
