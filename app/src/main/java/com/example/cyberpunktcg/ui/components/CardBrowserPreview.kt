@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,7 +45,6 @@ internal fun CardBrowserPreview(
         Text(stringResource(card.type.labelResId), style = MaterialTheme.typography.labelMedium)
         CardBrowserStats(card, powerLabel, MaterialTheme.typography.labelMedium)
         if (actionLabel != null) {
-            Spacer(Modifier.weight(1f))
             Text(actionLabel, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
         }
     }

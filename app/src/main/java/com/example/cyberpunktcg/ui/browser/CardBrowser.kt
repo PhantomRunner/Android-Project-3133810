@@ -2,19 +2,12 @@ package com.example.cyberpunktcg.ui.browser
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -32,13 +25,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -71,7 +62,6 @@ internal fun <T> CardBrowser(
     val gridState = rememberLazyGridState()
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
-    val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
 
     var previousState by remember { mutableStateOf(state) }
     LaunchedEffect(state) {
@@ -83,8 +73,8 @@ internal fun <T> CardBrowser(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         OutlinedTextField(
             value = state.query,
@@ -108,7 +98,7 @@ internal fun <T> CardBrowser(
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             itemVerticalAlignment = Alignment.CenterVertically,
             maxItemsInEachRow = 3,
         ) {
@@ -116,62 +106,35 @@ internal fun <T> CardBrowser(
                 selectedTypes = state.selectedTypes,
                 availableTypes = availableTypes,
                 onTypesChange = onTypesChange,
-                modifier = Modifier.weight(1f).widthIn(min = 96.dp * fontScale),
             )
             ColorFilterMenu(
                 selectedColors = state.selectedColors,
                 onColorsChange = onColorsChange,
-                modifier = Modifier.weight(1f).widthIn(min = 96.dp * fontScale),
             )
             CardSortMenu(
                 field = state.sortField,
                 direction = state.sortDirection,
                 onFieldChange = onSortFieldChange,
                 onDirectionChange = onSortDirectionChange,
-                modifier = Modifier.weight(1.2f).widthIn(min = 112.dp * fontScale),
             )
         }
-        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val spacing = 12.dp
-            val columnCount = ((maxWidth + spacing) / (150.dp * fontScale + spacing)).toInt().coerceAtLeast(1)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columnCount),
-                modifier = Modifier.fillMaxSize(),
-                state = gridState,
-                contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(spacing),
-            ) {
-                if (header != null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { header() }
-                }
-                if (cards.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Text(stringResource(R.string.no_cards_found))
-                    }
-                }
-                items(
-                    items = cards.chunked(columnCount),
-                    key = { row -> itemKey(row.first()) },
-                    span = { GridItemSpan(maxLineSpan) },
-                ) { row ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(spacing),
-                    ) {
-                        row.forEach { card ->
-                            key(itemKey(card)) {
-                                Box(
-                                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                                    propagateMinConstraints = true,
-                                ) {
-                                    cardContent(card)
-                                }
-                            }
-                        }
-                        repeat(columnCount - row.size) { Spacer(Modifier.weight(1f)) }
-                    }
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(128.dp),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            state = gridState,
+            contentPadding = PaddingValues(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (header != null) {
+                item(span = { GridItemSpan(maxLineSpan) }) { header() }
+            }
+            if (cards.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(stringResource(R.string.no_cards_found))
                 }
             }
+            items(cards, key = itemKey) { card -> cardContent(card) }
         }
     }
 }
@@ -181,20 +144,18 @@ private fun TypeFilterMenu(
     selectedTypes: Set<CardType>,
     availableTypes: List<CardType>,
     onTypesChange: (Set<CardType>) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Box(modifier) {
+    Box {
         OutlinedButton(
             onClick = {
                 keyboardController?.hide()
                 focusManager.clearFocus()
                 expanded = true
             },
-            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(8.dp),
         ) {
             val summary = if (selectedTypes.isEmpty()) stringResource(R.string.all_filter_options)
@@ -228,20 +189,18 @@ private fun TypeFilterMenu(
 private fun ColorFilterMenu(
     selectedColors: Set<CardColor>,
     onColorsChange: (Set<CardColor>) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Box(modifier) {
+    Box {
         OutlinedButton(
             onClick = {
                 keyboardController?.hide()
                 focusManager.clearFocus()
                 expanded = true
             },
-            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(8.dp),
         ) {
             val summary = if (selectedColors.isEmpty()) stringResource(R.string.all_filter_options)

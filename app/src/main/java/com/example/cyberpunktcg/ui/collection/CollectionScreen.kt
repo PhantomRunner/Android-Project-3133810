@@ -2,7 +2,6 @@ package com.example.cyberpunktcg.ui.collection
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -110,7 +109,6 @@ private fun OwnedCards(
                     onOpenPrinting(printing.printing.id)
                 })
                 PrintingLabel(printing)
-                Spacer(Modifier.weight(1f))
                 OwnedQuantityControls(printing, onChangeQuantity)
             }
         }

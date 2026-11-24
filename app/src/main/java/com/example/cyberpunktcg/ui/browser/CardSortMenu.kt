@@ -3,7 +3,6 @@ package com.example.cyberpunktcg.ui.browser
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -32,20 +31,18 @@ internal fun CardSortMenu(
     direction: SortDirection,
     onFieldChange: (CardSortField) -> Unit,
     onDirectionChange: (SortDirection) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Box(modifier) {
+    Box {
         OutlinedButton(
             onClick = {
                 keyboardController?.hide()
                 focusManager.clearFocus()
                 expanded = true
             },
-            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(8.dp),
         ) {
             Text(
