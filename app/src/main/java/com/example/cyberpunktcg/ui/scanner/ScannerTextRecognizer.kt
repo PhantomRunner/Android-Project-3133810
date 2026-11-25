@@ -12,6 +12,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
+// Reads text with ML Kit and lets only one recognition job use this reader at a time.
 internal class ScannerTextRecognizer {
     private val recognitionMutex = Mutex()
 

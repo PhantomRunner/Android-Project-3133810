@@ -23,6 +23,7 @@ import com.example.cyberpunktcg.ui.collection.PrintingLabel
 import com.example.cyberpunktcg.ui.collection.QuantitySaveError
 import com.example.cyberpunktcg.ui.components.CardArtworkFrame
 
+// Show the exact printing before saving and disable both actions while the write runs.
 @Composable
 internal fun ConfirmManualCard(
     state: ManualAddState.Confirming,

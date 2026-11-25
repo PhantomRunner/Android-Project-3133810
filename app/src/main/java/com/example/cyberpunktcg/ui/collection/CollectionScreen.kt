@@ -23,6 +23,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.ui.browser.CardBrowser
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 
+// Uses one set of browser filters for both tabs while keeping their scroll positions separate.
 @Composable
 internal fun CollectionScreen(
     state: CollectionUiState,
@@ -84,6 +85,7 @@ private fun OwnedCards(
         return
     }
 
+    // Filter and sort by the shared card data, then show each owned printing separately.
     val visible = browser.visibleCards(owned.values.map { it.first().card })
         .flatMap { owned.getValue(it.id) }
     val focusManager = LocalFocusManager.current

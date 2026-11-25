@@ -33,6 +33,7 @@ import com.example.cyberpunktcg.ui.components.CardArtworkFrame
 import com.example.cyberpunktcg.ui.components.cardStat
 import com.example.cyberpunktcg.ui.components.labelResId
 
+// Adds copy controls to the shared browser. The screen receives the draft and its add rules.
 @Composable
 internal fun DeckCardsScreen(
     deck: Deck?,

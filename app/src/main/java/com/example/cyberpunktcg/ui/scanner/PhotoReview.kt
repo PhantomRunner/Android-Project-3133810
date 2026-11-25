@@ -53,6 +53,7 @@ internal fun PhotoReview(
 ) {
     var bitmap by remember(photo) { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember(photo) { mutableStateOf(true) }
+    // Decode for display off the UI thread when this photo enters the screen or changes.
     LaunchedEffect(photo) {
         bitmap = withContext(Dispatchers.IO) {
             try {

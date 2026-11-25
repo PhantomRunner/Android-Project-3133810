@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 
 internal data class DeckCatalog(val cards: List<Card>, val ownedQuantities: Map<String, Int>)
 
+// The deck ViewModel uses this interface, so tests can supply their own data in place of Room.
 internal interface DeckRepository {
     val decks: Flow<List<Deck>>
     val catalog: Flow<DeckCatalog>
@@ -27,6 +28,8 @@ internal class RoomDeckRepository(
     private val dao = database.deckDao()
 
     override val decks = dao.observeDecks().map { decks -> decks.map { it.toDeck() } }
+    // Decks use card IDs, so combine owned copies from all printings of the same card.
+    // Use a printing with artwork for the preview when one is available.
     override val catalog = collection.printings.map { printings ->
         val byCard = printings.groupBy { it.card.id }
         val cards = byCard.values.map { editions ->

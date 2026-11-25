@@ -16,6 +16,8 @@ internal abstract class DeckDao {
     @Insert
     abstract suspend fun createDeck(deck: DeckEntity)
 
+    // Save the name and replace both card lists in one transaction.
+    // Their stored positions let the app restore the same order after loading.
     @Transaction
     open suspend fun saveDeck(deck: Deck): Boolean {
         require(deck.name.isNotBlank() && deck.items.all { it.quantity > 0 })
@@ -27,6 +29,7 @@ internal abstract class DeckDao {
         return true
     }
 
+    // Room's foreign keys also remove the deck's Legend and Main entries.
     @Query("DELETE FROM decks WHERE id = :deckId")
     abstract suspend fun deleteDeck(deckId: String)
 

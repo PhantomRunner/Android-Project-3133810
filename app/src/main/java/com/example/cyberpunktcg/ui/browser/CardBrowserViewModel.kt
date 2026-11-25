@@ -9,6 +9,8 @@ import com.example.cyberpunktcg.data.model.BrowsableCard
 import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
 
+// Owns the search, filters and sort order for one browser. SavedStateHandle lets
+// Android restore those choices with the navigation entry if the process is recreated.
 internal class CardBrowserViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
     var uiState by mutableStateOf(
         CardBrowserState(

@@ -45,6 +45,8 @@ import com.example.cyberpunktcg.data.model.CardColor
 import com.example.cyberpunktcg.data.model.CardType
 import com.example.cyberpunktcg.ui.components.labelResId
 
+// Reuses the same controls and grid across screens. The caller owns the filters
+// and passes callbacks for changes, plus a composable for each result.
 @Composable
 internal fun <T> CardBrowser(
     cards: List<T>,
@@ -63,9 +65,10 @@ internal fun <T> CardBrowser(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // remember keeps the comparison value across recompositions of the current grid.
     var previousState by remember { mutableStateOf(state) }
     LaunchedEffect(state) {
-        // Back restores the grid position; only a change of conditions resets it.
+        // A change to the browser settings scrolls to the top. Returning can restore the old position.
         if (state != previousState) {
             previousState = state
             gridState.scrollToItem(0)
@@ -145,6 +148,7 @@ private fun TypeFilterMenu(
     availableTypes: List<CardType>,
     onTypesChange: (Set<CardType>) -> Unit,
 ) {
+    // The open menu is temporary UI state and resets when this menu leaves the screen.
     var expanded by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current

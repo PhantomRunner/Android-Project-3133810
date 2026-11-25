@@ -14,6 +14,8 @@ internal class AmbientLightSensor(context: Context) {
     private val sensor = manager?.getDefaultSensor(Sensor.TYPE_LIGHT)
     val isAvailable: Boolean get() = sensor != null
 
+    // callbackFlow lets Android's listener send readings to flow collectors.
+    // It registers when collected, and awaitClose unregisters when collection stops.
     val readings = callbackFlow {
         val sensorManager = manager
         val lightSensor = sensor

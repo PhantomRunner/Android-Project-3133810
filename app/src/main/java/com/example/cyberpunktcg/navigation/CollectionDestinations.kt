@@ -23,7 +23,9 @@ internal fun NavGraphBuilder.collectionDestinations(navController: NavController
     composable(AppDestination.Collection.route) { entry ->
         val collection: CollectionViewModel = viewModel()
         val browser: CardBrowserViewModel = viewModel()
+        // Turn the ViewModel's flow into Compose state while this screen is active.
         val state by collection.state.collectAsStateWithLifecycle()
+        // The chosen tab is saved with this navigation entry.
         val ownedOnly by entry.savedStateHandle.getStateFlow(OWNED_ONLY, false).collectAsStateWithLifecycle()
         CollectionScreen(
             state = state,
@@ -61,6 +63,7 @@ internal fun NavGraphBuilder.collectionDestinations(navController: NavController
 
 private const val OWNED_ONLY = "collection_owned_only"
 
+// Details use the collection screen's ViewModel so both see the same Room data.
 @Composable
 private fun sharedCollectionViewModel(navController: NavController, entry: NavBackStackEntry): CollectionViewModel {
     val collectionEntry = remember(entry) { navController.getBackStackEntry(AppDestination.Collection.route) }

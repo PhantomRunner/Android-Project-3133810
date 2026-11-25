@@ -8,6 +8,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 
+// Pass a plain-text list to the Android share chooser so the user can pick where it goes.
 internal fun shareDeck(context: Context, deck: Deck, findCard: (String) -> Card?) {
     val send = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"

@@ -11,6 +11,7 @@ internal data class CollectionCatalog(
     val printings: List<CardPrintingEntity>,
 )
 
+// Turn the bundled JSON into the records Room can import.
 internal fun parseCollectionCatalog(json: String): CollectionCatalog {
     val catalog = JSONObject(json)
     require(catalog.getInt("version") == 1) { "Unsupported collection catalog version" }
@@ -51,6 +52,7 @@ internal fun parseCollectionCatalog(json: String): CollectionCatalog {
         )
     }
 
+    // Check that IDs are unique and that every printing points to a known card and set.
     val setIds = sets.map { it.id }.toSet()
     val cardIds = cards.map { it.id }.toSet()
     require(setIds.size == sets.size && cardIds.size == cards.size &&

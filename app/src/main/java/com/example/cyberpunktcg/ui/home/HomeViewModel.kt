@@ -21,9 +21,11 @@ internal sealed interface HomeStatisticsState {
     data object Error : HomeStatisticsState
 }
 
+// Turns the collection statistics flow into a loading, ready or error state for Home.
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class HomeViewModel(statisticsSource: Flow<CollectionStatistics>) : ViewModel() {
     private val retryRequests = MutableStateFlow(0L)
+    // Each retry starts collecting the source again. Keep it active briefly across screen changes.
     val state = retryRequests.flatMapLatest {
         statisticsSource.map<CollectionStatistics, HomeStatisticsState> { HomeStatisticsState.Ready(it) }
             .onStart { emit(HomeStatisticsState.Loading) }

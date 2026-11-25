@@ -27,6 +27,7 @@ fun CyberpunkTcgTheme(
     )
 }
 
+// Both Activities use this setup for Material colors and system bars.
 internal fun ComponentActivity.setCompanionContent(
     content: @Composable (ThemeViewModel, SensorsViewModel) -> Unit,
 ) {
@@ -35,10 +36,12 @@ internal fun ComponentActivity.setCompanionContent(
     enableEdgeToEdge()
     setContent {
         val mode = theme.mode
+        // Theme selection reads the sensor only in Auto and while the Activity is resumed.
         val light = if (mode == ThemeMode.AUTO) {
             sensors.light.collectAsStateWithLifecycle(minActiveState = Lifecycle.State.RESUMED).value
         } else null
         val darkTheme = mode.resolveDarkTheme(light?.automaticDarkTheme, isSystemInDarkTheme())
+        // Apply the matching system bar styles after Compose has applied the theme.
         SideEffect {
             enableEdgeToEdge(
                 statusBarStyle = if (darkTheme) {

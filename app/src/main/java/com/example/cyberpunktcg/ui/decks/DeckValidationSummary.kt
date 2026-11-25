@@ -19,6 +19,7 @@ import com.example.cyberpunktcg.domain.DeckValidation
 import com.example.cyberpunktcg.ui.components.labelResId
 import com.example.cyberpunktcg.ui.components.cardStat
 
+// Displays the results calculated by the deck rules so this UI can focus on presenting them.
 @Composable
 internal fun DeckValidationSummary(validation: DeckValidation) {
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {

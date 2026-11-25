@@ -7,6 +7,7 @@ internal data class LightSensorState(
     val isLowLight: Boolean = false,
 )
 
+// Turns lux readings into two decisions, one for Auto theme and one for the camera warning.
 internal class AmbientLightPolicy {
     private var state = LightSensorState(available = true)
 

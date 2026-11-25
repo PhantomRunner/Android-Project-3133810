@@ -24,6 +24,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 
+// Home and My decks share this summary. Share and Delete appear when the caller supplies those actions.
 @Composable
 internal fun DeckSummaryCard(
     deck: Deck,

@@ -43,6 +43,7 @@ internal fun selectedLegendColors(deck: Deck, cards: List<Card>): Set<CardColor>
     return cards.filter { it.type == CardType.LEGEND && it.id in deck.legendIds }.map { it.color }.toSet()
 }
 
+// The selected Legends supply RAM for their own color. An unknown value leaves that limit unknown.
 internal fun calculateRamLimits(legends: List<Card>): Map<CardColor, Int?> {
     return CardColor.entries.associateWith { color ->
         val matching = legends.filter { it.type == CardType.LEGEND && it.color == color }
@@ -50,6 +51,7 @@ internal fun calculateRamLimits(legends: List<Card>): Map<CardColor, Int?> {
     }
 }
 
+// The copy limit groups cards by name and subtitle, even when their IDs differ.
 internal fun countCardCopies(items: List<DeckItem>, cards: List<Card>, card: Card): Int {
     val matchingIds = cards.filter {
         it.type != CardType.LEGEND && it.name == card.name && it.subtitle == card.subtitle
@@ -57,6 +59,7 @@ internal fun countCardCopies(items: List<DeckItem>, cards: List<Card>, card: Car
     return items.filter { it.cardId in matchingIds }.sumOf { it.quantity }
 }
 
+// Calculate warnings from the current deck. The editor can still save an incomplete draft.
 internal fun validateDeck(deck: Deck, cards: List<Card>, ownedQuantities: Map<String, Int>? = null): DeckValidation {
     val cardsById = cards.associateBy { it.id }
     val legends = deck.legendIds.mapNotNull { cardsById[it] }.filter { it.type == CardType.LEGEND }

@@ -34,6 +34,7 @@ internal data class CardSetEntity(
     val language: String,
 )
 
+// A printing describes a specific edition of a card, including its set and artwork.
 @Entity(
     tableName = "card_printings",
     foreignKeys = [
@@ -63,6 +64,7 @@ internal data class OwnedPrintingEntity(
     val quantity: Int,
 )
 
+// Room combines the printing, its card and set, and the user's quantity for the UI.
 internal data class CollectionPrinting(
     @Embedded val printing: CardPrintingEntity,
     @Relation(parentColumn = "cardId", entityColumn = "id") val card: CardEntity,
@@ -72,6 +74,7 @@ internal data class CollectionPrinting(
     val quantity: Int get() = owned?.quantity ?: 0
 }
 
+// Store a list of unit types as JSON in a single database column.
 internal class CollectionConverters {
     @TypeConverter
     fun encodeUnitTypes(types: List<String>): String = JSONArray(types).toString()

@@ -34,6 +34,7 @@ import com.example.cyberpunktcg.sensors.ShakeEffect
 import com.example.cyberpunktcg.ui.components.DeckSummaryCard
 import kotlinx.coroutines.flow.Flow
 
+// Lists saved decks and asks for confirmation before sending a deletion request.
 @Composable
 internal fun MyDecksScreen(
     decks: List<Deck>,
@@ -51,6 +52,7 @@ internal fun MyDecksScreen(
     var pendingDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val deckToDelete = decks.firstOrNull { it.id == pendingDeleteId }
+    // Pause the shortcut while a dialog is open so a shake cannot open a deck underneath it.
     ShakeEffect(
         events = shakeEvents,
         enabled = accelerometerAvailable && decks.isNotEmpty() && !showCreateDialog && deckToDelete == null,

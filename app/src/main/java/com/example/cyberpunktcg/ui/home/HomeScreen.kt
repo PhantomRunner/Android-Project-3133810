@@ -29,6 +29,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 
+// Displays live collection totals and recent saved decks supplied by the navigation host.
 @Composable
 internal fun HomeScreen(
     deckCount: Int,

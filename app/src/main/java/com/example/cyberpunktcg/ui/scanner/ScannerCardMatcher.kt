@@ -12,16 +12,19 @@ internal data class ScannerCardMatch(
     val isApproximate: Boolean,
 )
 
+// Suggest up to five catalog cards and keep their printings together for edition selection.
 internal fun matchScannerCards(
     recognizedText: String,
     printings: List<CollectionPrinting>,
 ): List<ScannerCardMatch> {
     val lines = recognizedText.lineSequence().map(::normalize).filter(String::isNotEmpty).toList()
     if (lines.isEmpty()) return emptyList()
+    // Try single lines and neighboring pairs because a title can span two lines.
     val phrases = (lines + lines.zipWithNext { first, second -> "$first $second" }).toSet()
     val matches = printings.groupBy { it.card.id }.values.mapNotNull { editions ->
         rankMatch(editions, phrases)
     }
+    // A matching subtitle narrows suggestions that share the same card name.
     val namesWithMatchingSubtitles = matches.filter { it.subtitleMatches }.map { it.name }.toSet()
     return matches
         .filter { it.subtitleMatches || it.name !in namesWithMatchingSubtitles }
@@ -51,6 +54,7 @@ private fun rankMatch(editions: List<CollectionPrinting>, phrases: Set<String>):
     val name = normalize(card.name)
     if (name.isEmpty()) return null
     val subtitle = normalize(card.subtitle)
+    // Allow small OCR errors in longer names, where one wrong letter matters less.
     val maxEdits = when {
         name.length >= 12 -> 2
         name.length >= 8 -> 1
@@ -80,6 +84,7 @@ private fun closestDistance(name: String, phrases: Collection<String>, maxEdits:
         .minOrNull()
 }
 
+// Count the fewest insertions, deletions and replacements needed to match two strings.
 private fun editDistance(expected: String, actual: String): Int {
     var previous = IntArray(actual.length + 1) { it }
     var current = IntArray(actual.length + 1)

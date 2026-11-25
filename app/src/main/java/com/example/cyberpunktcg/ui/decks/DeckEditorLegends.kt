@@ -39,6 +39,7 @@ import com.example.cyberpunktcg.ui.components.LegendArtworkPreview
 import com.example.cyberpunktcg.ui.components.cardStat
 import com.example.cyberpunktcg.ui.theme.LegacyNavigationBarScrim
 
+// An empty slot opens the picker. A filled slot offers card details and removal.
 @Composable
 internal fun DeckEditorLegendSlots(
     legendIds: List<String>,
@@ -77,6 +78,7 @@ internal fun DeckEditorLegendSlots(
     }
 }
 
+// Show owned Legends and use the editor's eligibility check to enable each selection.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeckEditorLegendPicker(

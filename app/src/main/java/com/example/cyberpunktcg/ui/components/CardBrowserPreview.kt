@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.BrowsableCard
 
+// Collection and deck preview share this layout. Each screen supplies the action for a tap.
 @Composable
 internal fun CardBrowserPreview(
     card: BrowsableCard,
@@ -52,6 +53,7 @@ internal fun CardBrowserPreview(
 
 @Composable
 internal fun CardBrowserStats(card: BrowsableCard, powerLabel: String?, style: TextStyle) {
+    // Some cards have a text power value. Keep it when available and use a dash for unknown stats.
     val unknown = stringResource(R.string.collection_unknown_value)
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),

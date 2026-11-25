@@ -10,6 +10,7 @@ import java.io.FileNotFoundException
 
 internal const val COLLECTION_ASSET_DIRECTORY = "collection"
 
+// Connects the bundled card catalog and Room to the features that use the collection.
 internal class CollectionRepository(
     context: Context,
     private val dao: CollectionDao = CollectionDatabase.get(context).collectionDao(),
@@ -21,6 +22,7 @@ internal class CollectionRepository(
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
 
+    // Read the asset on an IO dispatcher. The returned IDs identify the printings in this import.
     suspend fun loadCatalog(): Set<String>? {
         val catalog = withContext(Dispatchers.IO) {
             val input = try {

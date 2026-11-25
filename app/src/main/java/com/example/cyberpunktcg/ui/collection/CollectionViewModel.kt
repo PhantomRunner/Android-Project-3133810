@@ -37,6 +37,7 @@ internal data class CollectionUiState(
     val readFailed: Boolean = false,
     val saveFailed: Boolean = false,
 ) {
+    // Keep the catalog view to the IDs from the current asset. Owned can still use older rows.
     fun activeCatalogPrintings(): List<CollectionPrinting>? {
         val readyCatalog = catalog as? CatalogStatus.Ready ?: return null
         val activePrintings = printings?.filter { it.printing.id in readyCatalog.printingIds } ?: return null
@@ -45,8 +46,10 @@ internal data class CollectionUiState(
     }
 }
 
+// Loads the catalog, observes stored printings and handles changes to owned quantities.
 internal class CollectionViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = CollectionRepository(application)
+    // The ViewModel updates the latest snapshot in MutableStateFlow. Screens get a read-only StateFlow.
     private val mutableState = MutableStateFlow(CollectionUiState())
     val state = mutableState.asStateFlow()
 
@@ -58,6 +61,7 @@ internal class CollectionViewModel(application: Application) : AndroidViewModel(
         retry()
     }
 
+    // Scanner matching waits until the catalog is ready, missing or failed to load.
     suspend fun awaitActiveCatalog(): ActiveCatalog = state.mapNotNull { snapshot ->
         when {
             snapshot.readFailed || snapshot.catalog == CatalogStatus.Failed -> ActiveCatalog.Failed
@@ -67,6 +71,7 @@ internal class CollectionViewModel(application: Application) : AndroidViewModel(
     }.first()
 
     fun retry() {
+        // Watch Room separately from the import so stored cards can be read even without the asset.
         if (observeJob?.isActive != true) {
             mutableState.update { it.copy(readFailed = false) }
             observeJob = viewModelScope.launch {
@@ -95,6 +100,7 @@ internal class CollectionViewModel(application: Application) : AndroidViewModel(
         }
     }
 
+    // Queue taps in this ViewModel. Room sends the new quantities back through its flow after each write.
     fun changeQuantity(printingId: String, delta: Int) {
         viewModelScope.launch {
             quantityChanges.withLock {

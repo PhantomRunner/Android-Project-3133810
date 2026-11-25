@@ -38,6 +38,7 @@ import com.example.cyberpunktcg.data.local.collection.CollectionRepository
 import com.example.cyberpunktcg.sensors.SensorsViewModel
 import kotlinx.coroutines.launch
 
+// Connects each route to a screen and passes in the data and actions it needs.
 @Composable
 internal fun AppNavHost(
     navController: NavHostController,
@@ -49,6 +50,7 @@ internal fun AppNavHost(
     onTabSelected: (AppDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Run deck writes from click callbacks in a coroutine tied to this navigation host.
     val scope = rememberCoroutineScope()
     val onBackToDecks: () -> Unit = {
         if (!navController.popBackStack(AppDestination.Decks.route, false)) {
@@ -68,6 +70,7 @@ internal fun AppNavHost(
             val home: HomeViewModel = viewModel(factory = factory)
             val statistics by home.state.collectAsStateWithLifecycle()
             val decks = decksViewModel.decks
+            // Room returns decks in creation order, so show the newest saved ones first.
             val recentDecks = decks.takeLast(3).asReversed()
             val legendsByDeck = recentDecks.associate { deck ->
                 deck.id to deck.legendIds.mapNotNull { id ->
@@ -127,6 +130,7 @@ internal fun AppNavHost(
             decksViewModel = decksViewModel,
             arguments = listOf(navArgument("deckId") { type = NavType.StringType }),
         ) { entry ->
+            // The route carries an ID. The shared ViewModel provides the latest draft.
             val deckId = entry.arguments?.getString("deckId")
             val deck = decksViewModel.editingDeck(deckId)
             DeckEditorScreen(
@@ -161,6 +165,7 @@ internal fun AppNavHost(
             val deck = decksViewModel.editingDeck(deckId)
 
 
+            // Keep this browser's filters with the editor entry across visits to Add cards.
             val browserOwner = remember(entry, deckId) {
                 if (deckId != null && decksViewModel.findDeck(deckId) != null) {
                     navController.getBackStackEntry(deckEditorRoute(deckId))
@@ -240,6 +245,7 @@ internal fun AppNavHost(
     }
 }
 
+// Give screens that use deck data the same loading and error UI.
 private fun NavGraphBuilder.deckDestination(
     destination: AppDestination,
     decksViewModel: DecksViewModel,

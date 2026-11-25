@@ -13,7 +13,8 @@ internal class SensorsViewModel(application: Application) : AndroidViewModel(app
     val accelerometerAvailable: Boolean get() = accelerometer.isAvailable
     val shakes = accelerometer.shakes
 
-    // Auto theme and camera share one listener. The last subscriber releases it immediately.
+    // Within this Activity, all light readings come from one listener.
+    // The last subscriber leaving releases it and clears the previous reading.
     val light = lightSensor.readings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0),

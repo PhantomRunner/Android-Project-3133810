@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 
 internal enum class CameraPreviewError { NO_REAR_CAMERA, UNAVAILABLE }
 
+// Hosts the Android PreviewView in Compose and sends CameraX capture results to the ViewModel.
 @Composable
 internal fun CameraPreview(
     viewModel: ScannerViewModel,
@@ -81,6 +82,8 @@ internal fun CameraPreview(
     var isStreaming by remember(previewView) { mutableStateOf(false) }
     var isBound by remember(previewView) { mutableStateOf(false) }
 
+    // Set up CameraX once for this view and lifecycle. When the preview leaves composition,
+    // onDispose removes observers and releases the bound camera use cases.
     DisposableEffect(previewView, lifecycleOwner, viewModel) {
         val providerFuture = ProcessCameraProvider.getInstance(context)
         val preview = Preview.Builder().build()
@@ -110,6 +113,7 @@ internal fun CameraPreview(
                     val selector = CameraSelector.DEFAULT_BACK_CAMERA
                     if (cameraProvider.hasCamera(selector)) {
                         preview.setSurfaceProvider(previewView.surfaceProvider)
+                        // Let CameraX start and stop the preview and capture with the Activity.
                         val camera = cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
                         isBound = true
                         cameraInfo = camera.cameraInfo
@@ -158,6 +162,7 @@ internal fun CameraPreview(
                 onClick = {
                     scope.launch {
                         val request = viewModel.beginCapture() ?: return@launch
+                        // The camera can stop while the ViewModel creates the output file.
                         if (!isBound || !isStreaming ||
                             !lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
                         ) {

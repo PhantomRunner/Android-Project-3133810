@@ -24,6 +24,7 @@ internal fun <T : BrowsableCard> sortCards(
     val descending = direction == SortDirection.DESCENDING
     val nameOrder = if (descending) String.CASE_INSENSITIVE_ORDER.reversed() else String.CASE_INSENSITIVE_ORDER
     val numberOrder = if (descending) reverseOrder<Int>() else naturalOrder<Int>()
+    // Unknown stats go last whether the known numbers go up or down.
     val statOrder = nullsLast(numberOrder)
     val comparator: Comparator<T> = when (field) {
         CardSortField.NAME -> compareBy(nameOrder) { it.name }

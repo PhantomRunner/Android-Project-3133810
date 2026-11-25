@@ -6,6 +6,7 @@ internal data class CollectionStatistics(
     val ownedEditions: Int,
 )
 
+// Home shows three counts: all owned copies, distinct cards, and distinct owned printings.
 internal fun calculateCollectionStatistics(printings: List<CollectionPrinting>): CollectionStatistics {
     var totalCards = 0L
     val cardIds = mutableSetOf<String>()

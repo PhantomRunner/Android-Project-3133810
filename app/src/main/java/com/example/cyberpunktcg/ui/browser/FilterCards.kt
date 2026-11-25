@@ -2,6 +2,7 @@ package com.example.cyberpunktcg.ui.browser
 
 import com.example.cyberpunktcg.data.model.BrowsableCard
 
+// A card must match the search and both filter groups. An empty group allows all its values.
 internal fun <T : BrowsableCard> filterCards(cards: List<T>, state: CardBrowserState): List<T> {
     val query = state.query.trim()
     return cards.filter { card ->

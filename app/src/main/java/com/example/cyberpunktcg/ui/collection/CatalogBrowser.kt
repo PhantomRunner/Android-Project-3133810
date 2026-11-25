@@ -31,6 +31,7 @@ import com.example.cyberpunktcg.data.local.collection.CollectionPrinting
 import com.example.cyberpunktcg.ui.browser.CardBrowser
 import com.example.cyberpunktcg.ui.browser.CardBrowserViewModel
 
+// Shows one result per card and lets the caller decide what to do with a chosen edition.
 @Composable
 internal fun CatalogBrowser(
     state: CollectionUiState,
@@ -65,6 +66,7 @@ internal fun CatalogBrowser(
         return
     }
 
+    // Group again only when the printings change. The chosen ID can restore the open picker.
     val byCard = remember(printings) { printings.groupBy { it.card.id } }
     var selectedCardId by rememberSaveable { mutableStateOf<String?>(null) }
     val focusManager = LocalFocusManager.current

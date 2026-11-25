@@ -10,11 +10,13 @@ import com.example.cyberpunktcg.ui.collection.CollectionViewModel
 import com.example.cyberpunktcg.ui.theme.setCompanionContent
 import java.io.File
 
+// Hosts a scanner session and connects it to the same Room collection as the main app.
 class ScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val photoDirectory = File(cacheDir, "scanner_photos")
         val collection = ViewModelProvider(this)[CollectionViewModel::class.java]
+        // Pass in the photo folder, text reader and collection actions for this session.
         val factory = viewModelFactory {
             initializer {
                 val repository = CollectionRepository(applicationContext)

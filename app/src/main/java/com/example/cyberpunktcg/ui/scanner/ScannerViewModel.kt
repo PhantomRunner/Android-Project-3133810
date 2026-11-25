@@ -63,6 +63,8 @@ internal sealed interface ManualAddState {
 internal enum class ManualAddError { SAVE_FAILED, QUANTITY_LIMIT }
 internal enum class ConfirmationSource { CATALOG, SUGGESTION }
 
+// Holds the scanner session through Activity recreation. The scan state stays in memory
+// and the photo is temporary. Only a confirmed copy is saved to the collection.
 internal class ScannerViewModel(
     private val photoDirectory: File,
     private val recognizeText: suspend (File) -> String,
@@ -81,6 +83,7 @@ internal class ScannerViewModel(
     private var closed = false
 
 
+    // Clear leftover photos at the start of a new session, including after process death.
     private val cachePreparation = viewModelScope.async(Dispatchers.IO) {
         try {
             ensurePhotoDirectory()
@@ -100,6 +103,7 @@ internal class ScannerViewModel(
         if (!closed) uiState = uiState.copy(isPreparing = false, hasCaptureError = !prepared)
     }
 
+    // Reserve one capture before creating the file so repeated taps cannot start another.
     suspend fun beginCapture(): PhotoCaptureRequest? {
         if (closed || uiState.isPreparing || uiState.isCapturing || uiState.photoFile != null) return null
         val id = ++requestId
@@ -125,6 +129,8 @@ internal class ScannerViewModel(
         return PhotoCaptureRequest(id, checkNotNull(file)).also { pendingCapture = it }
     }
 
+    // A callback can arrive after a retake or after the camera has been removed.
+    // Accept only the pending request so old results cannot replace the current photo.
     fun photoCaptured(request: PhotoCaptureRequest) {
         if (closed || request != pendingCapture) {
             if (request.file != uiState.photoFile) deletePhoto(request.file)
@@ -151,6 +157,7 @@ internal class ScannerViewModel(
         uiState = uiState.copy(isCapturing = false, hasCaptureError = false)
     }
 
+    // Invalidate old camera and text results, stop work, and remove the temporary photo.
     fun reset() {
         ++requestId
         photoJob?.cancel()
@@ -183,6 +190,7 @@ internal class ScannerViewModel(
         photoJob = viewModelScope.launch { findMatches(text, photoRequestId, retry = true) }
     }
 
+    // Start matching only when the text reader returns usable text for the current photo.
     private fun recognizePhoto(photo: File) {
         val photoRequestId = requestId
         uiState = uiState.copy(ocr = ScannerOcrState.Reading, matchState = ScannerMatchState.Idle)
@@ -205,6 +213,7 @@ internal class ScannerViewModel(
         }
     }
 
+    // Wait for the catalog, then compare names on a background dispatcher.
     private suspend fun findMatches(text: String, photoRequestId: Long, retry: Boolean) {
         val result = try {
             when (val catalog = loadCatalog(retry)) {
@@ -229,6 +238,7 @@ internal class ScannerViewModel(
         manualAddState = ManualAddState.Browsing
     }
 
+    // A suggestion names a card. If it has several printings, ask which one to add.
     fun selectSuggestedCard(cardId: String) {
         if (manualAddState != ManualAddState.Inactive) return
         val results = uiState.matchState as? ScannerMatchState.Results ?: return
@@ -262,6 +272,7 @@ internal class ScannerViewModel(
         }
     }
 
+    // Return to the list or photo review based on where the selection was made.
     fun backFromManualAdd() {
         when (val state = manualAddState) {
             ManualAddState.Browsing -> manualAddState = ManualAddState.Inactive
@@ -275,6 +286,7 @@ internal class ScannerViewModel(
         }
     }
 
+    // Write one copy and keep the confirmation available for retry if saving fails.
     fun confirmPrinting() {
         val confirmation = manualAddState as? ManualAddState.Confirming ?: return
         if (confirmation.isSaving) return

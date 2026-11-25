@@ -8,6 +8,7 @@ internal class ShakeDetector {
 
     fun onAcceleration(x: Float, y: Float, z: Float, timestampNanos: Long): Boolean {
         if (!x.isFinite() || !y.isFinite() || !z.isFinite() || timestampNanos < 0) return false
+        // Use the total acceleration in units of gravity so phone orientation matters less.
         val gravity = sqrt(x.toDouble() * x + y.toDouble() * y + z.toDouble() * z) / 9.80665
         if (gravity < 1.3) armed = true
         if (gravity < 2.7 || !armed) return false

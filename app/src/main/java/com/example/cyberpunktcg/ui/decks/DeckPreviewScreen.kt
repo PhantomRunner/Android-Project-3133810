@@ -34,6 +34,7 @@ import com.example.cyberpunktcg.sensors.ShakeEffect
 import com.example.cyberpunktcg.ui.components.CardBrowserPreview
 import kotlinx.coroutines.flow.Flow
 
+// Shows a read-only preview of the current draft, including edits that are still in memory.
 @Composable
 internal fun DeckPreviewScreen(
     deck: Deck?,
@@ -54,6 +55,7 @@ internal fun DeckPreviewScreen(
     val selectedMain = previewItems.mapNotNull { item ->
         mainCards.firstOrNull { it.id == item.cardId }?.let { card -> card to item.quantity }
     }
+    // Shuffling is available only when at least two different Main cards are displayed.
     ShakeEffect(
         events = shakeEvents,
         enabled = accelerometerAvailable && selectedMain.size > 1,

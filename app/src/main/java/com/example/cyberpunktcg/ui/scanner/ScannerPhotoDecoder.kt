@@ -10,6 +10,7 @@ import java.io.IOException
 internal fun decodeScannerPhoto(photo: File, maxSide: Int): Bitmap {
     require(maxSide > 0)
     val path = photo.absolutePath
+    // Read the size first so large photos can be sampled down during decoding.
     val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeFile(path, options)
     if (options.outWidth <= 0 || options.outHeight <= 0) throw IOException("Unreadable photograph")
@@ -20,6 +21,7 @@ internal fun decodeScannerPhoto(photo: File, maxSide: Int): Bitmap {
     options.inJustDecodeBounds = false
     options.inSampleSize = sampleSize
 
+    // Use the photo's EXIF metadata to apply its saved rotation and mirroring.
     val orientation = ExifInterface(path).getAttributeInt(
         ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL,
     )

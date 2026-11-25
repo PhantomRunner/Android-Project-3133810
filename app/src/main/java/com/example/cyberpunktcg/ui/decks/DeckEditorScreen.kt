@@ -43,6 +43,7 @@ import com.example.cyberpunktcg.data.model.Card
 import com.example.cyberpunktcg.data.model.Deck
 import com.example.cyberpunktcg.domain.DeckValidation
 
+// Displays the current deck and sends edits, navigation and save actions back through callbacks.
 @Composable
 internal fun DeckEditorScreen(
     deck: Deck?,
@@ -64,15 +65,18 @@ internal fun DeckEditorScreen(
     onSaveDraft: () -> Unit,
     onBackToDecks: () -> Unit,
 ) {
+    // Use the same unsaved-changes check for Android Back and the top bar's back button.
     BackHandler(onBack = onBack)
     if (deck == null) {
         DeckNotFoundScreen(onBackToDecks)
         return
     }
     val focusManager = LocalFocusManager.current
+    // Keep these display choices across rotation and reset them if the editor switches decks.
     var showLegendPicker by rememberSaveable(deck.id) { mutableStateOf(false) }
     var showChecks by rememberSaveable(deck.id) { mutableStateOf(false) }
     val gridState = rememberLazyGridState()
+    // A deck stores IDs and counts. Look up the card details needed to draw the tiles.
     val selectedMain = deck.items.mapNotNull { item ->
         mainCards.firstOrNull { it.id == item.cardId }?.let { card -> card to item.quantity }
     }

@@ -19,6 +19,7 @@ internal enum class AppDestination(val route: String, @get:StringRes val titleRe
     DeckCardDetails("deck_card_details/{deckId}/{cardId}", R.string.card_details);
 
 
+    // Keep the parent tab highlighted when one of its detail screens is open.
     val mainTab: AppDestination
         get() = when (this) {
             AddCollectionCards, CardDetails -> Collection
@@ -27,6 +28,7 @@ internal enum class AppDestination(val route: String, @get:StringRes val titleRe
         }
 }
 
+// Encode IDs used in routes so special characters stay inside a single argument.
 internal fun cardDetailsRoute(printingId: String): String {
     return "card_details/${Uri.encode(printingId)}"
 }

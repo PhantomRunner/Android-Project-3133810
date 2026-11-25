@@ -30,6 +30,7 @@ import com.example.cyberpunktcg.ui.collection.CollectionViewModel
 import com.example.cyberpunktcg.ui.collection.EditionPicker
 import kotlinx.coroutines.flow.StateFlow
 
+// Both scanner suggestions and manual browsing lead to a confirmation for one printing.
 @Composable
 internal fun ScannerFlow(
     scanner: ScannerViewModel,
@@ -39,6 +40,7 @@ internal fun ScannerFlow(
     onDone: () -> Unit,
 ) {
     val state = scanner.manualAddState
+    // Keep saveable UI state for camera and catalog while switching between steps.
     val savedViews = rememberSaveableStateHolder()
     BackHandler(
         enabled = state == ManualAddState.Browsing || state is ManualAddState.Confirming,

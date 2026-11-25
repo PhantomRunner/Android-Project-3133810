@@ -88,6 +88,7 @@ internal fun PrintingLabel(
     }
 }
 
+// Send the printing ID and the requested change to the caller, which owns the quantity.
 @Composable
 internal fun OwnedQuantityControls(printing: CollectionPrinting, onChangeQuantity: (String, Int) -> Unit) {
     val removeLabel = stringResource(R.string.remove_card_copy, printing.card.name)

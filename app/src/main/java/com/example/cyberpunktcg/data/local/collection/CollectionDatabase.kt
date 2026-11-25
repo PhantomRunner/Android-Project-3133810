@@ -16,6 +16,8 @@ import com.example.cyberpunktcg.data.local.decks.DeckItemEntity
 import com.example.cyberpunktcg.data.local.decks.DeckLegendEntity
 import kotlinx.coroutines.flow.Flow
 
+// Room stores the collection and saved decks in one database.
+// Version 2 adds deck tables while keeping data from version 1.
 @Database(
     entities = [
         CardEntity::class, CardSetEntity::class, CardPrintingEntity::class, OwnedPrintingEntity::class,
@@ -33,6 +35,7 @@ internal abstract class CollectionDatabase : RoomDatabase() {
     companion object {
         @Volatile private var instance: CollectionDatabase? = null
 
+        // All callers in this process reuse one database with the application context.
         fun get(context: Context): CollectionDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -57,6 +60,8 @@ internal abstract class CollectionDao {
         upsertPrintings(catalog.printings)
     }
 
+    // Read and update the count in one transaction so two writes cannot use the same old count.
+    // A missing ownership row represents zero copies.
     @Transaction
     open suspend fun changeQuantity(printingId: String, delta: Int): Boolean {
         require(delta == -1 || delta == 1)

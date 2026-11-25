@@ -14,6 +14,7 @@ internal class AccelerometerSensor(context: Context) {
     private val sensor = manager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     val isAvailable: Boolean get() = sensor != null
 
+    // Each active collector gets a detector that turns raw motion readings into shake events.
     val shakes = callbackFlow {
         val sensorManager = manager
         val accelerometer = sensor

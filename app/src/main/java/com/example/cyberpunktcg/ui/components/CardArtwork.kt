@@ -14,6 +14,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.local.collection.COLLECTION_ASSET_DIRECTORY
 import java.io.File
 
+// Load artwork from the bundled assets and show the same placeholder for missing or unreadable images.
 @Composable
 internal fun CardArtwork(path: String?, modifier: Modifier) {
     val placeholder = painterResource(R.drawable.card_art_placeholder)

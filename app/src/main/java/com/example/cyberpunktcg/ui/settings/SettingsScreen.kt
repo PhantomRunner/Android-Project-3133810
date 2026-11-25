@@ -23,6 +23,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.data.model.ThemeMode
 import com.example.cyberpunktcg.sensors.LightSensorState
 
+// Shows the current theme choice and sends selection changes back to the caller.
 @Composable
 internal fun SettingsScreen(
     themeMode: ThemeMode,

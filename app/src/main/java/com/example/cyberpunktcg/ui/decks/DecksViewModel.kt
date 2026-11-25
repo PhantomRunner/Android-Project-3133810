@@ -22,11 +22,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+// Gives Home and the deck screens a common view of saved decks, edits and card availability.
 internal class DecksViewModel(private val repository: DeckRepository) : ViewModel() {
     var decks: List<Deck> by mutableStateOf(emptyList())
         private set
 
-    // deck ID as a key to keep suspended editor intact with the deck's edits.
+    // Keep a separate working copy per deck so switching screens or rotating keeps edits.
+    // These copies stay in memory until saved to Room and are lost if the process ends.
     private var workingCopies: Map<String, Deck> by mutableStateOf(emptyMap())
     private var previewOrders: Map<String, List<String>> by mutableStateOf(emptyMap())
 
@@ -55,9 +57,12 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         if (loadJob?.isActive == true) return
         isLoading = true
         loadFailed = false
+        // viewModelScope keeps this collection running across rotation and cancels it
+        // when the ViewModel is cleared.
         loadJob = viewModelScope.launch {
             try {
                 repository.loadCatalog()
+                // Either flow can refresh the screen, including when ownership changes elsewhere.
                 combine(repository.decks, repository.catalog) { saved, catalog -> saved to catalog }
                     .collect { (saved, catalog) ->
                         decks = saved
@@ -80,11 +85,13 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
 
     fun findCard(cardId: String?): Card? = cards.firstOrNull { it.id == cardId }
 
+    // Keep selected cards visible even if ownership drops to zero, so they can still be removed.
     fun selectableMainCards(deckId: String?): List<Card> {
         val selected = editingDeck(deckId)?.items.orEmpty().map { it.cardId }.toSet()
         return mainCards.filter { ownedQuantity(it.id) > 0 || it.id in selected }
     }
 
+    // Create an empty saved deck before the editor opens.
     suspend fun createDeck(name: String): Deck? {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty() || isLoading || loadFailed) {
@@ -106,6 +113,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
 
     fun randomSavedDeckId(): String? = decks.randomOrNull()?.id
 
+    // A shuffle only changes the order shown in Preview. Reuse it while the same cards are present.
     fun previewItems(deckId: String?): List<DeckItem> {
         val deck = editingDeck(deckId) ?: return emptyList()
         val order = previewOrders[deck.id] ?: return deck.items
@@ -124,6 +132,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         previewOrders = previewOrders + (deck.id to order)
     }
 
+    // Show the working copy if one exists, or start from the saved deck.
     fun editingDeck(deckId: String?): Deck? {
         val saved = findDeck(deckId) ?: return null
         return workingCopies[deckId] ?: saved
@@ -138,6 +147,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         workingCopies = workingCopies + (deckId to deck.copy(name = name))
     }
 
+    // Each slot needs an owned Legend with a name that is still unused in the deck.
     fun canAddLegend(deckId: String, cardId: String): Boolean {
         val deck = editingDeck(deckId) ?: return false
         val legend = legends.firstOrNull { it.id == cardId } ?: return false
@@ -161,6 +171,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         return editingDeck(deckId)?.items?.firstOrNull { it.cardId == cardId }?.quantity ?: 0
     }
 
+    // Adding a Main card needs a matching Legend color, room under the copy limit and an owned copy.
     fun canAddCard(deckId: String, cardId: String): Boolean {
         val deck = editingDeck(deckId) ?: return false
         val card = mainCards.firstOrNull { it.id == cardId } ?: return false
@@ -168,6 +179,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         return countCardCopies(deck.items, cards, card) < 3 && cardQuantity(deckId, cardId) < ownedQuantity(cardId)
     }
 
+    // Keep one Main entry per card ID. Adding another copy updates that entry's quantity.
     fun addCard(deckId: String, cardId: String) {
         if (!canAddCard(deckId, cardId)) return
         val deck = editingDeck(deckId) ?: return
@@ -181,6 +193,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         previewOrders = previewOrders - deckId
     }
 
+    // Removing the last copy drops the entry and clears any preview order.
     fun removeCard(deckId: String, cardId: String) {
         val deck = editingDeck(deckId) ?: return
         val items = deck.items.mapNotNull { item ->
@@ -199,6 +212,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         return validateDeck(deck, cards, ownedQuantities)
     }
 
+    // Save a snapshot of the draft, so the editor can keep any newer edits made while saving.
     suspend fun saveDraft(deckId: String): Boolean {
         val deck = editingDeck(deckId) ?: return false
         val name = deck.name.trim()
@@ -207,7 +221,6 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         return write {
             if (!repository.saveDeck(saved)) return@write false
             decks = decks.map { if (it.id == deckId) saved else it }
-            // Edits made while the database write was running still belong to the editor.
             if (workingCopies[deckId] == deck) workingCopies = workingCopies - deckId
             true
         }
@@ -228,6 +241,7 @@ internal class DecksViewModel(private val repository: DeckRepository) : ViewMode
         previewOrders = previewOrders - deckId
     }
 
+    // Let only one database write run at a time so create, save and delete do not overlap.
     private suspend fun write(operation: suspend () -> Boolean): Boolean = writes.withLock {
         isSaving = true
         writeFailed = false

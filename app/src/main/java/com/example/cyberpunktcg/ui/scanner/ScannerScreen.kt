@@ -41,6 +41,7 @@ import com.example.cyberpunktcg.R
 import com.example.cyberpunktcg.sensors.LightSensorState
 import kotlinx.coroutines.flow.StateFlow
 
+// Chooses between photo review, a permission or error message, and the live camera.
 @Composable
 internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSensorState>) {
     val context = LocalContext.current
@@ -66,12 +67,14 @@ internal fun ScannerScreen(viewModel: ScannerViewModel, light: StateFlow<LightSe
         cameraError = null
     }
 
+    // Ask for permission on the first visit if needed. The saved flag survives rotation.
     LaunchedEffect(Unit) {
         if (!initialRequestMade) {
             initialRequestMade = true
             if (!permissionGranted) permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
+    // Recheck permission when returning from Android Settings and remove the observer on exit.
     DisposableEffect(lifecycleOwner, context) {
 
         val observer = LifecycleEventObserver { _, event ->

@@ -29,6 +29,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
+// Keeps the app bars in place as the navigation host switches screens.
 @Composable
 internal fun CompanionApp(
     themeMode: ThemeMode,
@@ -37,10 +38,13 @@ internal fun CompanionApp(
     onOpenScanner: () -> Unit,
 ) {
 
+    // Pass the Room repository into the Activity's ViewModel so Home and the deck
+    // screens can use the same saved decks and working copies.
     val context = LocalContext.current.applicationContext
     val factory = remember(context) { viewModelFactory { initializer { DecksViewModel(RoomDeckRepository(context)) } } }
     val decksViewModel: DecksViewModel = viewModel(factory = factory)
     val navController = rememberNavController()
+    // The app bars update when the current navigation entry changes.
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val currentDestination = AppDestination.entries.firstOrNull {
@@ -50,6 +54,8 @@ internal fun CompanionApp(
     val editorDeckId = if (currentDestination == AppDestination.DeckEditor) {
         backStackEntry?.arguments?.getString("deckId")
     } else null
+    // Save only the pending dialog's deck ID so the prompt can survive rotation.
+    // Keying it to the current route could reset it before Navigation restores that route.
     var discardDeckId by rememberSaveable { mutableStateOf<String?>(null) }
 
     val onBack: () -> Unit = {
@@ -67,8 +73,6 @@ internal fun CompanionApp(
         }
     }
 
-    // Navigation restores its current entry after this state, so keep the pending ID
-    // without a rememberSaveable input key that would reset it during rotation.
     if (discardDeckId != null && discardDeckId == editorDeckId &&
         decksViewModel.hasUnsavedChanges(discardDeckId)
     ) {
@@ -122,6 +126,7 @@ internal fun CompanionApp(
     }
 }
 
+// Save the current tab's back stack so a later tab switch can restore it.
 private fun navigateToMainTab(navController: NavHostController, destination: AppDestination) {
     navController.navigate(destination.route) {
         popUpTo(navController.graph.findStartDestination().id) {
