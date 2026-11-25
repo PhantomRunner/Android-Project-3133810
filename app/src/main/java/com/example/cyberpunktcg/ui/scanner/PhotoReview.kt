@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -33,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.cyberpunktcg.R
+import com.example.cyberpunktcg.ui.components.CardArtworkFrame
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +66,12 @@ internal fun PhotoReview(
 
     Column(modifier = Modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val photoHeight = (maxHeight * 0.65f).coerceAtMost(420.dp)
+            val hasSuggestions = (matchState as? ScannerMatchState.Results)?.cards?.isNotEmpty() == true
+            val photoHeight = if (hasSuggestions) {
+                (maxHeight * 0.45f).coerceAtMost(280.dp)
+            } else {
+                (maxHeight * 0.65f).coerceAtMost(420.dp)
+            }
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                 Box(
                     modifier = Modifier.fillMaxWidth().height(photoHeight)
@@ -152,15 +160,26 @@ private fun ScannerSuggestions(
                     onClick = { onSelectCard(match.card.id) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(match.card.name, style = MaterialTheme.typography.titleSmall)
-                        if (match.card.subtitle.isNotBlank()) Text(match.card.subtitle)
-                        if (match.isApproximate) {
-                            Text(
-                                stringResource(R.string.scanner_match_possible),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CardArtworkFrame(
+                            path = match.editions.firstNotNullOfOrNull { it.printing.imagePath },
+                            color = match.card.color,
+                            modifier = Modifier.width(76.dp),
+                        )
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(match.card.name, style = MaterialTheme.typography.titleSmall)
+                            if (match.card.subtitle.isNotBlank()) Text(match.card.subtitle)
+                            if (match.isApproximate) {
+                                Text(
+                                    stringResource(R.string.scanner_match_possible),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
